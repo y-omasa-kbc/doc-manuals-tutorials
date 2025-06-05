@@ -4,12 +4,6 @@
 
 この演習では、Microsoft Azureのサーバーレスコンピューティングサービスである Azure Functions を使用して、簡単なWeb APIを作成します。具体的には、HTTP GETリクエストを受け取ると、JSON形式でメッセージを返すPython関数を作成し、Azureにデプロイしてブラウザから動作確認を行います。
 
-### **演習の目的**
-
-* Azure Functions を用いた基本的な開発フローを理解する。  
-* VSCode と Azure Functions 拡張機能を使った開発・デプロイ方法を習得する。  
-* Python で簡単な HTTP トリガー関数を作成し、JSONレスポンスを返す方法を学ぶ。
-
 ### **前提条件**
 (PCはWindows11で動作していることを前提とします。)
 
@@ -37,10 +31,10 @@ npm install -g azure-functions-core-tools --unsafe-perm true
 2. 左側のアクティビティバーから **Azure アイコン** をクリックし、Azureビューを開きます。  
 ![VSCodeのAzure拡張機能アイコン](./azure-functions-http-basic-python-img/001.png)
 
-1. AzureビューのWORKSPACEパネルにある **Functionsアイコン** をクリックし、**Create New Project...**を選択します。  
+1. AzureビューのWORKSPACEパネルにある **Functionsアイコン** をクリックし、**Create New Project...** を選択します。  
 ![Functionsアイコン](./azure-functions-http-basic-python-img/002.png)
 
-1. **プロジェクトを保存するフォルダを選択します。**　新規のプロジェクトの場合は、フォルダを作成して選択して下さい。 (例: C:\\Users\\YourUser\\Documents\\AzureFunctionsProjects や \~/AzureFunctionsProjects など)  
+1. **プロジェクトを保存するフォルダを選択します。**　新規のプロジェクトの場合は、フォルダを作成して選択して下さい。 (例: C:\\Users\\YourUser\\Documents\\FirstFunctionsProject など)  
 2. **プロジェクトの言語として Python を選択します。**  
 3. **Pythonインタープリタを選択します。** システムにインストールされているPython環境が表示されるので、適切なものを選択してください。 (仮想環境の使用を推奨しますが、この演習ではグローバル環境でも構いません)  
 4. **関数のテンプレートとして HTTP Trigger を選択します。**  
