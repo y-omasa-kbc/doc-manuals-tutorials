@@ -1,0 +1,114 @@
+openapi: '3.0.3'
+info:
+  title: API Title
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /users:
+    get:  
+      summary: ユーザー一覧取得 (Read)  
+      description: 登録されている全てのユーザー情報を一覧で取得します。  
+      responses:  
+        '200':  
+          description: ユーザー一覧の取得に成功  
+          content:  
+            application/json:  
+              schema:  
+                type: array  
+                items:  
+                  type: object  
+                  properties:  
+                    id:  
+                      type: integer  
+                    name:  
+                      type: string  
+                    email:  
+                      type: string  
+                  required:  
+                    - id  
+                    - name  
+                    - email
+    post:  
+      summary: 新規ユーザー作成 (Create)  
+      description: 新しいユーザーを作成します。  
+      requestBody:  
+        required: true  
+        content:  
+          application/json:  
+            schema:  
+              type: object  
+              properties:  
+                name:  
+                  type: string  
+                email:  
+                  type: string  
+              required:  
+                - name  
+                - email  
+      responses:  
+        '201':  
+          description: ユーザーの作成に成功
+
+  /users/{userId}:
+    get:
+      summary: 特定ユーザー取得 (Read)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ユーザー情報の取得に成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                required:
+                  - id
+                  - name
+                  - email
+    put:
+      summary: ユーザー情報更新 (Update)  
+      parameters:  
+        - name: userId  
+          in: path  
+          required: true  
+          schema:  
+            type: integer  
+      requestBody:  
+        content:  
+          application/json:  
+            schema:  
+              type: object  
+              properties:  
+                name:  
+                  type: string  
+                email:  
+                  type: string  
+              required:  
+                - name  
+                - email  
+      responses:  
+        '200':  
+          description: ユーザー情報の更新に成功
+    delete:  
+      summary: ユーザー削除 (Delete)  
+      parameters:  
+        - name: userId  
+          in: path  
+          required: true  
+          schema:  
+            type: integer  
+      responses:  
+        '204':  
+          description: ユーザーの削除に成功 (No Content)
