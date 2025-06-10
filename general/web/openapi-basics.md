@@ -343,6 +343,8 @@ paths:
         '204':  
           description: ユーザーの削除に成功 (No Content)
 ```
+componentsを使用して記述したYAMLファイルは[こちら(./openapi-basics-resource/sample2.yml)](./openapi-basics-resource/sample2.yml)です。
+
 どうでしょうか。paths以下の記述が大幅にスッキリし、「どのエンドポイントが、どのデータを使って、何をするか」が一目でわかるようになりました。データ構造の変更が必要になった場合も、componentsの中の定義を1ヶ所修正するだけで済むため、メンテナンスが非常に楽になります。
 
 ### **まとめ**
