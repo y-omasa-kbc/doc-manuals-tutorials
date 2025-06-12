@@ -40,9 +40,12 @@ graph TD
 2. 「リソースの作成」からAzure Cosmos DBを検索し、作成します。  
 3. APIとして「**Azure Cosmos DB for NoSQL**」を選択します。  
 4. **アカウント作成画面**で以下の情報を入力します。  
+   * **Workload Type**: 「**Development/Testing**」を選択。
+   * **サブスクリプション** : 自分のサブスクリプションを選択。
+   * **リソースグループ** : 選択または作成する  
    * **アカウント名**: 世界中で一意の名前（例: todo-api-cosmos-あなたの名前）  
-   * **場所**: (Asia Pacific) Japan East （東日本）などを選択。（もし選択できない場合は、Korea Central や Southeast Asia など別のリージョンを選択）  
-   * **ワークロードの種類を選択**: 「**開発**」を選択。  
+   * **Availabiliy Zones** : 今回は「無効」を選択
+   * **場所**: (Asia Pacific) Japan East （東日本）などを選択。（もし選択できない場合は、Korea Central や Southeast Asia など別のリージョンを選択）  Azure for StudentではUSしか選べない場合もある。
    * **容量モード**: 「**サーバーレス**」を選択。  
 5. 作成後、リソースに移動し「**データエクスプローラー**」を開きます。  
 6. 「**新しいコンテナー**」をクリックし、以下を設定します。  
@@ -117,7 +120,7 @@ Azure Functionsにおける「バインディング」は、関数と他のAzure
    app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
    # ToDo項目を登録する関数 (POST /api/items)  
-   @app.route(route="items", methods=\["POST"\])  
+   @app.route(route="items", methods=["POST"])  
    @app.cosmos_db_output(arg_name="newItem",  
                            database_name="ToDoList",  
                            container_name="Items",  
@@ -152,7 +155,7 @@ Azure Functionsにおける「バインディング」は、関数と他のAzure
            return func.HttpResponse("Error creating item.", status_code=500)
 
    # ToDo項目を一覧取得する関数 (GET /api/items)  
-   @app.route(route="items", methods=\["GET"\])  
+   @app.route(route="items", methods=["GET"])  
    @app.cosmos_db_input(arg_name="items",  
                           database_name="ToDoList",  
                           container_name="Items",  
@@ -178,7 +181,7 @@ Azure Functionsにおける「バインディング」は、関数と他のAzure
    * @app.cosmos_db_output(): **出力バインディング**を定義します。関数が返すデータをCosmos DBに書き込むよう設定しています。  
    * @app.cosmos_db_input(): **入力バインディング**を定義します。sql_queryで指定したクエリの結果が、関数の引数(items)に自動的に渡されます。
 
-## **6\. ローカル環境でのテスト**
+## **6. ローカル環境でのテスト**
 
 Azureにデプロイする前に、自分のPC上で関数が正しく動作するかを確認します。
 
