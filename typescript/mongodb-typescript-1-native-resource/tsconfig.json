@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2016", // コンパイル後のJavaScriptのバージョン
+    "module": "CommonJS", // モジュールシステム
+    "rootDir": "./src", // TypeScriptソースのルートディレクトリ
+    "outDir": "./dist", // コンパイル後のJSファイルの出力先
+    "strict": true, // 厳格な型チェックを有効化
+    "esModuleInterop": true, // ES ModulesとCommonJSの相互運用
+    "skipLibCheck": true, // 型定義ファイルのチェックをスキップ
+    "forceConsistentCasingInFileNames": true // ファイル名の大文字小文字を区別
+  },
+  "include": ["src/**/*"], // コンパイル対象のファイル
+  "exclude": ["node_modules"] // コンパイルから除外するディレクトリ
+}

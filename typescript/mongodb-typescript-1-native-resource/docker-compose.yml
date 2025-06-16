@@ -1,0 +1,30 @@
+services:
+  # TypeScript / Node.js Application Service
+  app:
+    build:
+      context: ./app # Dockerfileのあるディレクトリ
+      dockerfile: Dockerfile
+    container_name: ts_mongo_app
+    ports:
+      - "3000:3000" # ホストとコンテナのポートをマッピング
+    volumes:
+      - ./app:/usr/src/app # ホストのappディレクトリをコンテナにマウント
+      - /usr/src/app/node_modules # node_modulesはマウント対象から除外
+    depends_on:
+      - mongo # mongoサービスが起動してからappサービスを起動
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/mydatabase # DB接続文字列
+    tty: true # コンテナを起動し続けるための設定
+    stdin_open: true # 標準入力を開く
+
+  # MongoDB Service
+  mongo:
+    image: mongo:latest # 公式のMongoDBイメージを使用
+    container_name: ts_mongo_db
+    ports:
+      - "27017:27017" # ホストとコンテナのポートをマッピング
+    volumes:
+      - mongo-data:/data/db # DBのデータを永続化
+
+volumes:
+  mongo-data: # データ永続化のための名前付きボリューム
