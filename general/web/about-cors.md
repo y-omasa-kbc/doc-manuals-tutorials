@@ -10,14 +10,14 @@ graph TD
     end
 
     subgraph "サーバー群"  
-        WebServer[Webサーバー<br>https://my-app.com]  
-        ApiServer[APIサーバー<br>https://api.my-app.com]  
+        WebServer  
+        APIServer  
     end
 
     User -- ①HTML/JSを要求 --> WebServer
     WebServer -- ②HTML/JSを応答 --> User  
-    User -- ③JSがデータを要求<br>(オリジンが異なる) --> ApiServer  
-    ApiServer -- ④CORSヘッダーを付けて<br>データを応答 --> User
+    User -- ③JSがデータを要求<br>(オリジンが異なる) --> APIServer  
+    APIServer -- ④CORSヘッダーを付けて<br>データを応答 --> User
 ```
 この構成では、ブラウザで動作するJavaScriptが、自分を配信したWebサーバーとは**異なる場所（オリジン）にあるAPIサーバー**へ通信する必要があります。
 
@@ -44,9 +44,9 @@ Webサーバーの https://my-app.com/index.html に配置されたJavaScriptが
 | 通信先のURL | オリジン | 同一オリジンか？ | 理由 |
 | :---- | :---- | :---- | :---- |
 | https://my-app.com/css/style.css | https://my-app.com | ✔️ はい | プロトコル、ホスト、ポートが全て同じ（Webサーバー内での通信） |
-| **https://api.my-app.com**/data.json | https://api.my-app.com | ❌ いいえ | **ホストが異なる** (APIサーバーへの通信) |
-| **http://**my-app.com | http://my-app.com | ❌ いいえ | プロトコルが異なる (https vs http) |
-| https://my-app.com:**8000** | https://my-app.com:8000 | ❌ いいえ | ポート番号が異なる (暗黙の443 vs 8000) |
+| https://api.my-app.com/data.json | https://api.my-app.com | ❌ いいえ | ホストが異なる (APIサーバーへの通信) |
+| http://my-app.com | http://my-app.com | ❌ いいえ | プロトコルが異なる (https vs http) |
+| https://my-app.com:8000 | https://my-app.com:8000 | ❌ いいえ | ポート番号が異なる (暗黙の443 vs 8000) |
 
 このように、WebサーバーとAPIサーバーはホスト名が異なるため、「異なるオリジン」となります。
 
