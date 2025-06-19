@@ -45,13 +45,13 @@
 
 | 設定項目 | 説明・入力値 |
 | :---- | :---- |
-| **Workload Type** | **Development/Testing** を選択します。（学習・開発用途のため） |
+| **Workload Type** | **Development/Testing** を選択します。（一時的利用のため） |
 | **サブスクリプション** | ご自身のサブスクリプションを選択します。 |
 | **リソースグループ** | 「**新規作成**」をクリックし、cosmos-functions-rg など、わかりやすい名前を付けます。 |
 | **アカウント名** | **世界で一意**な名前を付けます（例: cosmos-functions-yourname-YYYYMMDD）。 |
 | **場所** | 「**東日本 (Japan East)**」など、任意のリージョンを選択します。 |
 | **容量モード** | 「**プロビジョニング済みスループット**」を選択します。 |
-| **Free Tier Discount の適用** | 「**適用**」を選択すると、一定の範囲で無料で利用できます。学習目的なので推奨します。 |
+| **Free レベル割引の適用** | 「**適用**」を選択すると、一定の範囲で無料で利用できます。学習目的なので推奨します。 |
 
 7. 入力後、「**確認および作成**」をクリックし、内容を確認してから「**作成**」をクリックします。デプロイが完了するまで数分かかります。
 
@@ -74,7 +74,7 @@ Cosmos DB アカウント内に、データを格納するためのデータベ�
 Functions から Cosmos DB に接続するために必要な「接続文字列」を取得します。
 
 1. Cosmos DB アカウントの左側メニューを下にスクロールし、「**設定**」カテゴリにある「**接続文字列**」を選択します。  
-2. 表示された接続文字列の中から、「**プライマリ接続文字列**」の右にあるコピーアイコンをクリックして、文字列をコピーします。この文字列は後ほど使用するため、メモ帳などに一時的に保存しておきます。
+2. 表示された接続文字列の中から、「**PRIMARY CONNECTION STRING**」の右にあるコピーアイコンをクリックして、文字列をコピーします。この文字列は後ほど使用するため、メモ帳などに一時的に保存しておきます。
 
 ### **ステップ4: Azure Functions プロジェクトと仮想環境の準備**
 
@@ -145,9 +145,18 @@ Functions から Cosmos DB に接続するために必要な「接続文字列�
 v2プログラミングモデルとRESTfulな設計思想に基づき、リソース (tasks) に対する操作を実装します。
 
 1. VS Codeのターミナル（仮想環境が有効な状態）で、HTTPトリガーの雛形を作成します。関数名はリソース名に合わせて tasks とします。  
-   ```
-   func new --name tasks --template "HTTP trigger"
-   ```
+    ```
+    func new --name tasks --template "HTTP trigger"
+    ```
+    実行すると、次のように認証レベルを選ぶよう指示されます。
+    ```
+    Use the up/down arrow keys to select a Auth Level:
+    FUNCTION
+    ANONYMOUS
+    ADMIN
+    ```
+    ↑↓キーを押して、ANONYMOUSを選択して[Enter]を押してください。作成する関数の仕様に応じて選択してください。ここでは、認証を通さずにアクセスするAPIを作成します。
+
    これにより、function_app.py ファイル内に tasks という名前の関数が1つ作成されます。  
 2. 生成された function_app.py ファイルを開き、内容全体を以下のコードに書き換えます
 ```python
@@ -321,7 +330,7 @@ def get_tasks(req: func.HttpRequest) -> func.HttpResponse:
 * @app.route(...): create_task と同じパス (route="tasks") ですが、こちらは methods=["GET"] に設定されているため、GET メソッドのリクエストを処理します。  
 * **処理の流れ**:  
   1. Cosmos DBへの接続を確立します（create_taskと同様）。  
-  2. collection.find({}): Tasksコレクション内の**すべての**ドキュメント（タスク）を検索して取得します。{} は「条件なし」を意味します。  
+  2. collection.find({}): Tasksコレクション内の **すべての** ドキュメント（タスク）を検索して取得します。{} は「条件なし」を意味します。  
   3. list(...): 取得したデータをリスト形式に変換します。  
   4. json.dumps(tasks, cls=JSONEncoder): 取得したタスクのリストを、先ほど定義したカスタムの JSONEncoder を使ってJSON文字列に変換します。これにより ObjectId が正しく処理されます。  
   5. func.HttpResponse(...): 変換したJSONデータをレスポンスのボディに含めて、クライアントに返します。status_code=200 は「成功」を示す標準的なステータスコードです。
@@ -360,7 +369,7 @@ APIテストクライアントを使用して、新しいタスクをデータ�
    * **キー:** Content-Type  
    * **値:** application/json  
 4. **ボディ (Body)** タブを選択し、送信するデータをJSON形式で入力します。  
-   ```json
+   ```
    {  
        "task": "RESTful APIの設計",  
        "category": "Work",  
@@ -423,9 +432,16 @@ APIテストクライアントを使用して、新しいタスクをデータ�
 以上で、作成したAPIの基本的な動作確認は完了です。
 
 ## **6. Azureへのデプロイ**
-
 ローカルでの動作確認が完了したら、APIをAzureにデプロイします。
    ( デプロイ先となるAzure Functions アプリケーションがない場合は作成してください。)
+
+**重要：**
+デプロイ先のAzure Functions 関数アプリの概要を確認してください。オペレーティングシステムがLinuxになっている場合は、ソースコードの以下の行をコメントアウトして、デプロイ後は動かないようにしてください。
+```python
+venv_path = Path(__file__).parent / "venv" / "Lib" / "site-packages"
+sys.path.append(str(venv_path))
+```
+詳細は function_app.py コード解説 1. ModuleNotFoundError への対策 に記載されています。
 
 1. **VS CodeからAzureへデプロイ**  
    * VS CodeのアクティビティバーからAzureアイコンを選択します。  
