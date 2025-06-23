@@ -118,44 +118,197 @@ PowerShellは、コマンドプロンプトが抱えていた問題を解決す�
 * **エイリアス機能:** ls (Linux) や dir (コマンドプロンプト) のように、他のCUIツールで使われるコマンド名をPowerShellでも使えるように「エイリアス（別名）」が設定されています。これにより、過去の知識を活かしやすくなっています。  
 * **強力な連携機能（パイプライン）:** あるコマンドの実行結果を、別のコマンドに渡してさらに処理を続けることができます。
 
-#### **PowerShellの代表的なコマンド（コマンドレット）**
-
-コマンドプロンプトの操作と比較しながら見ていきましょう。多くのコマンドでエイリアスが用意されていることがわかります。
-
-| 目的 | PowerShellコマンドレット (エイリアス) | コマンドプロンプトのコマンド |
-| :---- | :---- | :---- |
-| 今いる場所を確認 | Get-Location (gl, pwd) | cd |
-| フォルダの中身を見る | Get-ChildItem (gci, ls, dir) | dir |
-| フォルダを移動する | Set-Location (sl, cd) | cd |
-| フォルダを作成する | New-Item -ItemType Directory [名前] (mkdir) | mkdir |
-| ファイルを作成する | New-Item -ItemType File [名前] | echo. > |
-| ファイルの中身を見る | Get-Content (gc, cat, type) | type |
-| ファイルをコピーする | Copy-Item (cpi, cp, copy) | copy |
-| ファイルを移動する | Move-Item (mi, mv, move) | move |
-| ファイル/フォルダ削除 | Remove-Item (ri, del, rm) | del / rmdir |
-| 画面の表示を消去 | Clear-Host (cls, clear) | cls |
-| ネットワーク設定を確認 | Get-NetIPAddress | ipconfig |
-
 **便利な機能：タブ補完**
 
 ファイル名やフォルダ名、コマンドを途中まで入力して Tab キーを押すと、候補を自動で補完してくれます。入力ミスを防ぎ、作業を高速化できるので絶対にマスターしましょう！
 
-### **第5章：演習問題（基本編）**
+### **第5章：パスの概念を理解しよう（相対パスと絶対パス）**
+
+CUIでファイルやフォルダを操作する際に避けて通れないのが「**パス**」の概念です。パスとは、コンピューター内でのファイルやフォルダの「住所」のようなものです。この章では、システム開発で必須となる相対パスと絶対パスの違いを学びましょう。
+
+#### **絶対パス（フルパス）とは？**
+
+絶対パスは、コンピューターの最上位（ルート）から目的のファイルやフォルダまでの**完全な道筋**を示すパスです。どこにいても、この住所を使えば確実にそのファイルにたどり着けます。
+
+**特徴：**
+- 必ずドライブレター（C:、D: など）から始まります
+- どの場所からでも同じパスで同じファイルを指定できます
+- 長くなりがちですが、確実性があります
+
+**例：**
+```
+C:\Users\YourName\Desktop\my_project\index.html
+C:\Program Files\Microsoft Office\OFFICE16\WINWORD.EXE
+D:\Documents\report.txt
+```
+
+#### **相対パス（相対的なパス）とは？**
+
+相対パスは、**現在いる場所（カレントディレクトリ）を基準**として、目的のファイルやフォルダまでの道筋を示すパスです。現在地からの「相対的な位置」を表現します。
+
+**特徴：**
+- 現在いる場所によって意味が変わります
+- 短く書けることが多く、効率的です
+- プロジェクト内でのファイル参照によく使われます
+
+**相対パスで使う特殊な記号：**
+- `.` （ドット）：現在のディレクトリ
+- `..` （ドットドット）：一つ上の親ディレクトリ
+- `\` （バックスラッシュ）：フォルダの区切り文字（Windowsの場合）
+
+#### **具体例で理解しよう**
+
+以下のようなフォルダ構造があるとします：
+
+```
+C:\Users\YourName\Desktop\
+├── my_project\
+│   ├── index.html
+│   ├── style.css
+│   └── images\
+│       └── logo.png
+└── documents\
+    └── readme.txt
+```
+
+**現在地が `C:\Users\YourName\Desktop\my_project` の場合：**
+
+| 目的のファイル | 絶対パス | 相対パス |
+|:---|:---|:---|
+| index.html | C:\Users\YourName\Desktop\my_project\index.html | .\index.html または index.html |
+| logo.png | C:\Users\YourName\Desktop\my_project\images\logo.png | .\images\logo.png または images\logo.png |
+| readme.txt | C:\Users\YourName\Desktop\documents\readme.txt | ..\documents\readme.txt |
+
+#### **相対パスの移動パターン**
+
+**1. 同じフォルダ内のファイル**
+```
+現在地: C:\project\
+目的: C:\project\file.txt
+相対パス: file.txt または .\file.txt
+```
+
+**2. 子フォルダ内のファイル**
+```
+現在地: C:\project\
+目的: C:\project\images\photo.jpg
+相対パス: images\photo.jpg または .\images\photo.jpg
+```
+
+**3. 親フォルダ内のファイル**
+```
+現在地: C:\project\src\
+目的: C:\project\readme.txt
+相対パス: ..\readme.txt
+```
+
+**4. 兄弟フォルダ内のファイル**
+```
+現在地: C:\project\src\
+目的: C:\project\docs\manual.pdf
+相対パス: ..\docs\manual.pdf
+```
+
+#### **実践：パスを使ったコマンド例**
+
+**絶対パスを使った例：**
+```cmd
+# どこにいても確実に実行できる
+copy "C:\Users\YourName\Desktop\file.txt" "C:\backup\"
+cd "C:\Program Files\Git\bin"
+```
+
+**相対パスを使った例：**
+```cmd
+# 現在地が C:\Users\YourName\Desktop の場合
+copy file.txt backup\
+cd my_project
+copy ..\documents\readme.txt .
+```
+
+#### **どちらを使うべき？**
+
+**絶対パスが適している場面：**
+- システム全体に関わる操作
+- 確実性が重要な自動化スクリプト
+- 異なる場所から同じファイルを参照する場合
+
+**相対パスが適している場面：**
+- プロジェクト内でのファイル操作
+- 短いコマンドで済ませたい場合
+- ポータブルなスクリプト（他の環境でも動作させたい）
+
+#### **よくある間違いと注意点**
+
+**1. 現在地を忘れる**
+```cmd
+# 現在地を確認してから相対パスを使う
+cd  # コマンドプロンプトの場合
+pwd # PowerShellの場合（Get-Locationのエイリアス）
+```
+
+**2. パスの区切り文字**
+- Windows: `\` （バックスラッシュ）
+- Linux/Mac: `/` （スラッシュ）
+- PowerShellでは両方使えますが、統一することが重要
+
+**3. スペースを含むパス**
+```cmd
+# スペースがある場合はダブルクォートで囲む
+cd "C:\Program Files\Microsoft Office"
+copy "my file.txt" backup\
+```
+
+この章で学んだパスの概念は、これから学ぶすべてのCUI操作の基礎となります。特に開発作業では、プロジェクトフォルダ内でのファイル操作が頻繁に行われるため、相対パスを自在に使えるようになることが重要です。
+
+### **第6章：演習問題（基本編）**
 
 まずはウォーミングアップです。以下の手順を、**コマンドプロンプト**で試してみてください。
 
 **シナリオ：簡単なプロジェクトの準備**
 
 1. デスクトップに移動してください。  
-2. dev_practice という名前のフォルダを作成してください。  
-3. 作成した dev_practice フォルダの中に移動してください。  
-4. index.html という空のファイルと、docs というフォルダを作成してください。  
-5. docs フォルダの中に移動してください。  
-6. readme.txt というファイルを作成し、その中に Set-Content -Path readme.txt -Value "This is a practice file." を使って文字を書き込んでください。（コマンドプロンプトの場合は echo "This is a practice file." > readme.txt）  
-7. docs フォルダにいる状態で、一つ上の階層 (dev_practice) にある index.html を docs フォルダにコピーしてください。  
-8. docs フォルダの中身を確認し、readme.txt と index.html があることを確認してください。
+```
+cd Desktop
+```
 
-### **第6章：ストーリーで学ぶ！実践ハンズオン**
+2. dev_practice という名前のフォルダを作成してください。  
+```
+mkdir dev_practice
+```
+
+3. 作成した dev_practice フォルダの中に移動してください。  
+```
+cd dev_practice
+```
+
+4. index.html という空のファイルと、docs というフォルダを作成してください。  
+```
+echo. > index.html
+mkdir docs
+```
+
+5. docs フォルダの中に移動してください。  
+```
+cd docs
+```
+
+6. readme.txt というファイルを作成し、その中に echo "This is a practice file." > readme.txt を使って文字を書き込んでください。
+```
+echo "This is a practice file." > readme.txt
+```
+
+7. docs フォルダにいる状態で、一つ上の階層 (dev_practice) にある index.html を docs フォルダにコピーしてください。  
+```
+copy ..\index.html .
+```
+
+8. docs フォルダの中身を確認し、readme.txt と index.html があることを確認してください。
+```
+dir
+```
+
+### **第7章：ストーリーで学ぶ！実践ハンズオン**
 
 ストーリー：  
 あなたはとあるIT企業に配属された新米開発者です。先輩から乱雑なファイルが入ったフォルダを渡され、その整理を依頼されました。CUIを使って、フォルダをきれいに整理するミッションに挑戦しましょう。
@@ -235,11 +388,11 @@ messy_project
 ```
 **ミッションコンプリート！** お疲れ様でした！マウスを使わずに、キーボードだけで素早くファイルを整理できました。
 
-### **第7章：おわりに**
+### **第8章：おわりに**
 
-今回の講義では、WindowsにおけるCUI操作の第一歩として、コマンドプロンプトとPowerShellの基本的な使い方を学びました。初めは難しく感じるかもしれませんが、使えば使うほどその便利さと強力さを実感できるはずです。
+今回の講義では、WindowsにおけるCUI操作の第一歩として、PowerShellの概要とコマンドプロンプトの基本的な使い方を学びました。初めは難しく感じるかもしれませんが、使えば使うほどその便利さと強力さを実感できるはずです。
 
 * **GUI:** 直感的で分かりやすい操作  
 * **CUI:** 定型作業の自動化・高速化、サーバー操作に必須
 
-それぞれの長所を理解し、場面に応じて使い分けることが、優秀な開発者への近道です。これからの学習で、ぜひ積極的にPowerShellを使ってみてください。
+それぞれの長所を理解し、場面に応じて使い分けることが、優秀な開発者への近道です。これからの学習で、ぜひ積極的にコマンドプロンプトを使ってみてください。
