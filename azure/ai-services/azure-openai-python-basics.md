@@ -64,12 +64,7 @@ Azure OpenAI Serviceを利用するには、まずAzure上にそのサービス�
 
 1. 作成したリソースへ移動:  
    デプロイ完了画面で「リソースに移動」ボタンをクリックするか、Azure Portalの検索バーから先ほど作成したリソース名を検索して開きます。  
-2. **キーとエンドポイントの取得**:  
-   * リソースメニューの左側にある「**キーとエンドポイント**」セクションを選択します。  
-   * 画面に「キー1」「キー2」および「エンドポイント」が表示されます。  
-   * 「**キー1**」の値をコピーして、プログラムの api_key として使用します（キー2でも可）。  
-   * 「**エンドポイント**」のURLをコピーして、プログラムの azure_endpoint として使用します。  
-3. **モデルのデプロイとデプロイ名の取得**:  
+2. **モデルのデプロイとデプロイ名の取得**:  
    * 作成したリソースの「概要」ページを開きます。  
    * ページの中央付近にある「**Azure AI Foundry Portalに移動**」（または旧名称の「Azure OpenAI Studioに移動」）というボタンを探してクリックします。  
    * Azure AI Foundry Portalが開いたら、左側のナビゲーションメニューから「**デプロイ**」（Deployments）を選択します。  
@@ -79,7 +74,15 @@ Azure OpenAI Serviceを利用するには、まずAzure上にそのサービス�
      3. **モデルを選択**: gpt-4o-mini を選択します。（利用可能なモデルが表示されます）  
      4. **デプロイ名**: Pythonコードで使用する名前を半角英数で入力します。混乱を避けるため、モデル名と同じ gpt-4o-mini と入力することを推奨します。  
      5. 「**作成**」ボタンをクリックします。デプロイが完了するまで少し待ちます。  
-   * デプロイが完了すると、一覧に項目が表示されます。その「**デプロイ名**」（例: gpt-4o-mini）をコピーしてください。これがプログラムの model に設定する値となります。
+3.  接続に関する情報の取得
+    1.  Azure AI Foundryで作成したデプロイを開くと、言語、SDK、認証の種類を指定することができるエリアが表示されます。Python, Azure OpenAI SDK, Key Authenticaionを選択して、接続するコードを表示します。
+    2.  「3. 基本的なコード サンプルを実行する」に表示されている以下の情報をコピーしておきます。
+        - endpint
+        - model_name
+        - deployment
+        - api_version
+    3.  デプロイの詳細ページ左上にあるエンドポイントのキーをコピーしておきます。
+
 
 #### **2.4. openaiライブラリ**
 
@@ -96,19 +99,19 @@ VSCodeのエクスプローラービューで、フォルダ内にazure_openai_e
 
 #### **ステップ2: コードの記述**
 
-作成したファイルを開き、以下のサンプルコードを記述します。コード内のプレースホルダー (YOUR_...) は、**2.3**で取得した各自の資格情報に置き換えてください。
+作成したファイルを開き、以下のサンプルコードを記述します。コード内のプレースホルダー [名称(番号)] は、**2.3**で取得した各自の資格情報に置き換えてください。
+
 ```python
 # 必要なライブラリをインポート  
 import os  
 from openai import AzureOpenAI
 
-# Azure OpenAI Serviceへの接続クライアントを初期化  
-# 事前に準備した自身の資格情報を設定  
-client = AzureOpenAI(  
-    azure_endpoint = "YOUR_AZURE_OPENAI_ENDPOINT", # エンドポイント  
-    api_key = "YOUR_AZURE_OPENAI_KEY",             # APIキー  
-    api_version = "2024-02-01"                     # APIバージョン  
-)
+endpoint = "[endpoint(2.3.2)]"
+model_name = "[model_name(2.3.2)]"
+deployment = "[deployment(2.3.2)]"
+
+subscription_key = "[key(2.3.3)]"
+api_version = "[api_version(2.3.2)]"
 
 # AIモデルへの指示（プロンプト）を定義  
 prompt_message = "クラウドコンピューティングとAIの関係性について、技術的な観点から解説してください。"
@@ -120,7 +123,7 @@ print("モデルからの応答:")
 try:  
     # Chat Completions APIを呼び出し、モデルからの応答を生成  
     response = client.chat.completions.create(  
-        model = "YOUR_AZURE_OPENAI_DEPLOYMENT_NAME",  # デプロイ名  
+        model = deployment,  # 使用するモデルのデプロイ名 
         messages = [  
             # システムメッセージでAIの役割や振る舞いを定義  
             {"role": "system", "content": "You are an AI assistant that provides detailed technical explanations."},  
