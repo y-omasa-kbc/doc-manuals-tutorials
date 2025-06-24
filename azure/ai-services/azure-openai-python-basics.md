@@ -113,6 +113,12 @@ deployment = "[deployment(2.3.2)]"
 subscription_key = "[key(2.3.3)]"
 api_version = "[api_version(2.3.2)]"
 
+client = AzureOpenAI(
+    api_version=api_version,
+    azure_endpoint=endpoint,
+    api_key=subscription_key,
+)
+
 # AIモデルへの指示（プロンプト）を定義  
 prompt_message = "クラウドコンピューティングとAIの関係性について、技術的な観点から解説してください。"
 
