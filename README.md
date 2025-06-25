@@ -41,6 +41,7 @@
 - [Webシステム開発：CORS（オリジン間リソース共有）を理解しよう](general/web/about-cors.md)
 - [RESTful APIの基礎](general/web/basics-restful-api.md)
 - [OpenAPI 基礎](general/web/openapi-basics.md)
+- [API テスト：Thunder Client を使ってみよう](general/web/api-testing-thunder-client.md)
 
 ### Windows関連
 
