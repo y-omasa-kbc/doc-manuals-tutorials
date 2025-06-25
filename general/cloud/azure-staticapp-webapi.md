@@ -1,4 +1,4 @@
-# **静的WebアプリケーションとAzure Functions概論およびAWSとの比較**
+# **静的WebアプリケーションとAzure Functions 概論およびAWSとの比較**
 
 ## **1\. はじめに**
 

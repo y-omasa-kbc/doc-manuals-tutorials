@@ -1,5 +1,5 @@
 
-## **【演習】PythonによるAzure AI Languageサービスの活用：感情分析とキーフレーズ抽出**
+## **演習：PythonによるAzure AI Languageサービスの活用：感情分析とキーフレーズ抽出**
 
 ### **概要**
 

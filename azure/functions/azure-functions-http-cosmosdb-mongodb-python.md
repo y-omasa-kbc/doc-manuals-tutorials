@@ -1,4 +1,4 @@
-# **Azure Functions と Azure Cosmos DB for MongoDB 連携ハンズオン**
+# **Azure Functions を用いたWeb API作成　CosmosDBとの連携(for MongoDB)**
 
 ## **1. はじめに**
 
