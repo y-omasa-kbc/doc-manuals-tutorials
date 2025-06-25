@@ -26,7 +26,7 @@
 
 ### クラウド関連
 
-- [Azure Static App WebAPI](general/cloud/azure-staticapp-webapi.md)
+- [静的WebアプリケーションとAzure Functions 概論およびAWSとの比較](general/cloud/azure-staticapp-webapi.md)
 
 ### Git関連
 
@@ -49,15 +49,15 @@
 
 ### Azure AI サービス
 
-- [【演習】PythonによるAzure AI Languageサービスの活用：感情分析とキーフレーズ抽出](azure/ai-services/azure-ai-language-pyhton.md)
+- [演習：PythonによるAzure AI Languageサービスの活用：感情分析とキーフレーズ抽出](azure/ai-services/azure-ai-language-pyhton.md)
 - [演習：PythonとAzure AI VisionによるAI画像分析](azure/ai-services/azure-ai-vision-python.md)
-- [演習: PythonによるAzure OpenAI Serviceの利用](azure/ai-services/azure-openai-python-basics.md)
+- [演習：PythonによるAzure OpenAI Serviceの利用](azure/ai-services/azure-openai-python-basics.md)
 
 ### Azure Functions
 
 - [Azure Functions を用いたWeb API作成　基礎](azure/functions/azure-functions-http-basic-python.md)
 - [Azure Functions HTTP CosmosDB Python](azure/functions/azure-functions-http-cosmosdb-python.md)
-- [Azure Functions HTTP CosmosDB MongoDB Python](azure/functions/azure-functions-http-cosmosdb-mongodb-python.md)
+- [Azure Functions を用いたWeb API作成　CosmosDBとの連携(for MongoDB)](azure/functions/azure-functions-http-cosmosdb-mongodb-python.md)
 
 
 
