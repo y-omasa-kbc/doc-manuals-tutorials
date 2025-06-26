@@ -4,7 +4,7 @@
 
 ## **1. OpenRouterとは？**
 
-OpenRouterは、GPTシリーズ、Claudeシリーズ、Llama、Mistralなど、数多くのLLMや画像生成AIに単一のAPIからアクセスできるようにする仲介サービス（アグリゲーター）です。
+OpenRouterは、GPTシリーズ、Claudeシリーズ、Llama、Mistralなど、数多くのLLMに単一のAPIからアクセスできるようにする仲介サービス（アグリゲーター）です。
 
 ### **OpenRouterの主なメリット**
 
