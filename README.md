@@ -30,6 +30,7 @@
 
 ### Git関連
 
+- [Git Branch Basics](general/git/git-branch-basics.md)
 - [Writing Commit Messages](general/git/writing-commit-message.md)
 
 ### LLM関連
