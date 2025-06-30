@@ -72,6 +72,7 @@
 
 - [Flask SQLAlchemy MariaDB](python/framework/flask-sqlalchemy-mariadb.md)
 - [LangChainとOllamaを使用したMarkdown情報に基づく質疑応答システムの構築](python/framework/langchain-ollama-rag.md)
+- [Streamlit Web API Basics](python/framework/streamlit-webapi-basics.md)
 
 ### Python セットアップ
 
