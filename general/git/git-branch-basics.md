@@ -43,6 +43,18 @@
 
 作業用のブランチを利用することで、mainブランチの状態を常に安定させながら、安全に新しい開発タスクを進めることができます。作業が完了した際には、その変更内容をmainブランチへ統合（マージ）します。
 
+```mermaid
+gitGraph
+    commit id: "初期コミット"
+    branch working
+    checkout working
+    commit id: "作業中コミット1"
+    commit id: "作業中コミット2"
+    commit id: "作業中コミット3"
+    checkout main
+    merge working id: "workingをマージ"
+```
+
 #### **1.3. ブランチ利用の重要性**
 
 ブランチの活用には以下の利点があります。
@@ -55,6 +67,17 @@
 ### **2. 基本的なブランチ操作コマンド**
 
 ブランチを扱うための基本的なコマンドシーケンスを以下に示します。
+
+```mermaid
+gitGraph
+    commit id: "mainの初期コミット"
+    branch login-page-task
+    checkout login-page-task
+    commit id: "ログインページ作業1"
+    commit id: "ログインページ作業2"
+    checkout main
+    merge login-page-task id: "mainにマージ"
+```
 
 #### **2.1. ブランチの作成と一覧表示**
 
@@ -113,6 +136,15 @@ git branch -d login-page-task
 ### 3. 演習
 
 以下の手順に従い、ブランチの作成から削除までの一連の操作を実践してください。
+```mermaid
+gitGraph
+    commit id: "初期コミット"
+    branch add-profile-work
+    checkout add-profile-work
+    commit id: "profile.txtの追加"
+    checkout main
+    merge add-profile-work id: "profile.txtをマージ"
+```
 
 1.  **リポジトリの準備**:  
     * 任意の場所に作業用ディレクトリを作成し、`git init` を実行してリポジトリを初期化する。  
@@ -140,4 +172,6 @@ git branch -d login-page-task
 * 原則として、`main`ブランチで直接作業を行わず、目的別の作業ブランチを作成して開発を進める。  
 * 基本操作である **`git branch`**, **`git switch`**, **`git merge`**, **`git branch -d`** の役割と使用法を習熟することが重要である。
 
-ブランチを適切に活用することは、コードの品質と開発プロセスの安定性を維持するために不可欠なスキルです。  
+ブランチを適切に活用することは、コードの品質と開発プロセスの安定性を維持するために不可欠なスキルです。
+
+
