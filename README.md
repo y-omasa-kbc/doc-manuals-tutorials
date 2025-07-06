@@ -43,6 +43,7 @@
 - [RESTful APIの基礎](general/web/basics-restful-api.md)
 - [OpenAPI 基礎](general/web/openapi-basics.md)
 - [API テスト：Thunder Client を使ってみよう](general/web/api-testing-thunder-client.md)
+- [JavaScript による Web API アクセスの基礎](general/web/javascript-webapi-basics.md)
 
 ### Windows関連
 
