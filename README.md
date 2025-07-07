@@ -37,6 +37,7 @@
 ### LLM関連
 
 - [OpenRouter](general/llm/openrouter.md)
+- [LangChain と OpenRouter を用いた RAG システムの構築](general/llm/langchain-rag-openrouter.md)
 
 ### Web関連
 
