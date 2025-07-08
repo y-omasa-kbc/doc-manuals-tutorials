@@ -1,4 +1,4 @@
-# **Python, LangChain, OpenRouterによるPDF QAシステム構築**
+# LangChain RAG 第1回 - Python, LangChain, OpenRouterによるPDF QAシステム構築
 
 ## **序論**
 
@@ -131,7 +131,7 @@ from langchain_openai import ChatOpenAI
 
 # 5. LLMの準備 (OpenRouter経由)  
 llm = ChatOpenAI(  
-    model_name="google/gemma-7b-it",  
+    model_name="qwen/qwen3-8b:free",  
     openai_api_base="https://openrouter.ai/api/v1",  
     temperature=0, # 回答の多様性を制御。0は決定的な出力を促す  
     max_tokens=1000  
@@ -204,7 +204,7 @@ def main():
 
     # --- 4. LLMの準備 (OpenRouter) ---  
     llm = ChatOpenAI(  
-        model_name="google/gemma-7b-it",  
+        model_name="qwen/qwen3-8b:free",  
         openai_api_base="https://openrouter.ai/api/v1",  
         openai_api_key=api_key,  
         temperature=0,  

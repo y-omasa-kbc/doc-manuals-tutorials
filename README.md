@@ -19,6 +19,8 @@
   - [Python](#python)
     - [Python フレームワーク](#python-フレームワーク)
     - [Python セットアップ](#python-セットアップ)
+  - [LLM](#llm)
+    - [LangChain](#langchain)
   - [TypeScript](#typescript)
     - [TypeScript API サーバー](#typescript-api-サーバー)
     - [TypeScript MongoDB](#typescript-mongodb)
@@ -37,7 +39,6 @@
 ### LLM関連
 
 - [OpenRouter](general/llm/openrouter.md)
-- [LangChain と OpenRouter を用いた RAG システムの構築](general/llm/langchain-rag-openrouter.md)
 
 ### Web関連
 
@@ -86,6 +87,10 @@
 
 - [Windows に PyEnv をインストール](python/setup/install-pyenv-windows.md)
 - [Windows ストアから Python をインストール](python/setup/install-python-windows-store.md)
+
+## LLM
+### LangChain
+- [LangChain RAG 第1回 - Python, LangChain, OpenRouterによるPDF QAシステム構築](llm/langchain/langchain-rag-01.md)
 
 ## TypeScript
 
