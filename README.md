@@ -91,6 +91,7 @@
 ## LLM
 ### LangChain
 - [LangChain RAG 第1回 - Python, LangChain, OpenRouterによるPDF QAシステム構築](llm/langchain/langchain-rag-01.md)
+- [LangChain RAG 第2回 - 対話機能とストリーミング出力](llm/langchain/langchain-rag-02.md)
 
 ## TypeScript
 
