@@ -12,6 +12,7 @@
     - [LLM関連](#llm関連)
     - [Web関連](#web関連)
     - [Windows関連](#windows関連)
+    - [アーキテクチャ関連](#アーキテクチャ関連)
   - [Docker](#docker)
   - [Azure](#azure)
     - [Azure AI サービス](#azure-ai-サービス)
@@ -52,6 +53,10 @@
 ### Windows関連
 
 - [コマンドプロンプト基礎](general/windows/command-prompt-basics.md)
+
+### アーキテクチャ関連
+
+- [キューベースの非同期処理パターン](general/architecture/queue-base-pattern.md)
 
 ## Docker
 
