@@ -16,6 +16,7 @@
   - [Azure](#azure)
     - [Azure AI サービス](#azure-ai-サービス)
     - [Azure Functions](#azure-functions)
+    - [Azure Queue Storage](#azure-queue-storage)
   - [Python](#python)
     - [Python フレームワーク](#python-フレームワーク)
     - [Python セットアップ](#python-セットアップ)
@@ -69,6 +70,10 @@
 - [Azure Functions を用いたWeb API作成　基礎](azure/functions/azure-functions-http-basic-python.md)
 - [Azure Functions HTTP CosmosDB Python](azure/functions/azure-functions-http-cosmosdb-python.md)
 - [Azure Functions を用いたWeb API作成　CosmosDBとの連携(for MongoDB)](azure/functions/azure-functions-http-cosmosdb-mongodb-python.md)
+
+### Azure Queue Storage
+
+- [Azure Queue Storage の基礎](azure/queue-storage/azure-queue-storage-basics.md)
 
 
 
