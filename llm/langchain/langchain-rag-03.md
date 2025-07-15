@@ -1,9 +1,6 @@
 # **LangChain RAG講座 第3回：RAGの精度向上テクニック**
 
 ## **1. はじめに**
-
-皆さん、こんにちは！LangChainを用いたRAG開発講座の第3回へようこそ。
-
 これまでの授業では、LangChainを使って基本的なRAGパイプラインを構築する方法を学んできました。今回は、その**検索精度をさらに向上させるための高度な検索手法**に焦点を当て、ハンズオン形式で学んでいきます。
 
 本資料は、まず**基本的なRAGの完全なソースコード**を示し、その動作を確認します。その後、応用として以下の3つの高度な検索手法を、それぞれ独立したコードで試していきます。
@@ -11,8 +8,6 @@
 * **Multi-Query Retriever**: 検索漏れを減らす賢い質問生成  
 * **Hybrid Search**: キーワードと意味の「いいとこ取り」検索  
 * **Re-ranking**: 検索結果をさらに磨き上げる並べ替え
-
-それでは、さっそく始めていきましょう！🚀
 
 ## **2. 準備**
 
@@ -26,31 +21,34 @@
    * VSCodeの上部メニューから ターミナル > 新しいターミナル を選択し、画面下部にターミナルを開きます。  
 2. **仮想環境の作成**:  
    * 開いたターミナルで、以下のコマンドを実行して.venvという名前の仮想環境を作成します。
-
+```
 python -m venv .venv
-
+```
 3. **仮想環境のアクティベート**:  
    * お使いのOSに応じて、以下のいずれかのコマンドを実行して仮想環境を有効にします。  
    * **Windowsの場合 (PowerShell):**  
+    ```
      .venvScriptsActivate.ps1
-
+    ```
    * **macOS / Linuxの場合:**  
+    ```
      source .venv/bin/activate
-
+    ```
    * 成功すると、ターミナルの行頭に (.venv) のような表示が追加されます。  
 4. **ライブラリのインストール**:  
    * アクティベートされたターミナルで、以下のコマンドを実行して、必要なライブラリをすべてインストールします。
-
+```
 pip install langchain langchain-openai langchain-community chromadb sentence-transformers tiktoken rank_bm25 python-dotenv
-
+```
 ### **2.2. APIキーの設定**
 
 ローカル環境で安全にAPIキーを管理するため、.envファイルを使用します。
 
 1. **.envファイルの作成**: VSCodeのエクスプローラーで、プロジェクトのルートディレクトリに .env という名前のファイルを新規作成します。  
 2. **APIキーの記述**: 作成した.envファイルに、以下のようにご自身の**OpenRouterのAPIキー**を記述して保存します。このキーはLLM（文章生成）の呼び出しに使用します。  
-   OPENROUTER_API_KEY="sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
+    ```
+    OPENROUTER_API_KEY="sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ```
 ## **3. 基本的なRAGパイプラインの実装と実行**
 
 最初に、RAGの基本となるパイプラインの完全なソースコードを見ていきましょう。このコードは、テキストファイルを読み込み、それをベクトル化して保存し、質問応答を行うまでの一連の流れを実装しています。
