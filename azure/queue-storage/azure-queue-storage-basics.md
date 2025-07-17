@@ -277,7 +277,7 @@ graph TD
 
 こうすることで、1つのイベントから派生した複数のタスクが、互いに影響を与えることなく並行して処理されます。
 
-解凍は[こちら](./azure-queue-storage-basics-ans.md)です。
+解答は[こちら](./azure-queue-storage-basics-ans.md)です。
 
 ## **4. まとめ**
 

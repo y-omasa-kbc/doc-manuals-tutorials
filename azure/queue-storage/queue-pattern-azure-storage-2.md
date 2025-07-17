@@ -75,10 +75,13 @@ AZURE_STORAGE_CONNECTION_STRING="<YOUR_CONNECTION_STRING>"
 * **並列処理**: 各フィルターは並行して動作できるため、システム全体のスループットを向上させることが可能です。
 
 ```mermaid
-graph TD  
-    subgraph "パイプライン"  
+graph LR  
+    subgraph "プロバイダー"
+        Input[データ入力]
+    end
+    subgraph "パイプライン"
         direction TB  
-        Input[データ入力] --> Q1(Pipe: queue-validate)  
+        Input --> Q1(Pipe: queue-validate)  
         Q1 --> F1[Filter A: 検証]  
         F1 --> Q2(Pipe: queue-enrich)  
         Q2 --> F2[Filter B: 情報付与]  
@@ -239,16 +242,16 @@ while True:
 #### **ステップ5: 実行と確認**
 
 1. **ターミナルを3つ**開き、それぞれでフィルターA、フィルターB、最終コンシューマーを起動します。  
-   # ターミナル1  
+   ターミナル1  
    ```
    python filter_validate.py  
    ```
+   ターミナル2  
    ```
-   # ターミナル2  
    python filter_enrich.py  
    ```
+   ターミナル3  
    ```
-   # ターミナル3  
    python final_consumer.py
    ```
 2. **4つ目のターミナル**でプロデューサーを実行し、パイプラインを開始します。  
@@ -282,9 +285,9 @@ graph LR
     end
 
     R -- "1 要求送信 (ReplyTo=RepQ, CorrID=xyz)" --> ReqQ  
-    P -- "2 要求受信" --> ReqQ  
+    ReqQ -- "2 要求受信" --> P  
     P -- "3 応答送信 (CorrID=xyz)" --> RepQ  
-    R -- "4 応答受信" --> RepQ
+    RepQ -- "4 応答受信" --> R
 ```
 ### **3.2. ハンズオン演習**
 
@@ -414,11 +417,14 @@ reply_client.delete_queue()
 #### **ステップ3: 実行と確認**
 
 1. **1つ目のターミナル**で、応答側（Replier）を先に起動します。  
+   ```
    python replier.py
+   ```
 
 2. **2つ目のターミナル**で、要求側（Requestor）を実行します。  
+   ```
    python requestor.py
-
+   ```
 Requestorが要求を送信し、Replierがそれを受け取って処理し、結果を返す一連の流れが確認できます。Requestorは無事に応答を受け取ると、一時的に作成した応答キューを削除して終了します。
 
 ## **4. まとめ**
