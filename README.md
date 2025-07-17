@@ -79,6 +79,8 @@
 ### Azure Queue Storage
 
 - [Azure Queue Storage の基礎](azure/queue-storage/azure-queue-storage-basics.md)
+- [Azure Queue Storage のパターン 1](azure/queue-storage/queue-pattern-azure-storage-1.md)
+- [Azure Queue Storage のパターン 2](azure/queue-storage/queue-pattern-azure-storage-2.md)
 
 
 
