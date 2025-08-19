@@ -122,15 +122,15 @@
 
 **tests/sum.test.ts**
 ```
-const { sum } \= require('../src/sum');
+const { sum } = require('../src/sum');
 
-describe('sum function', () \=\> {  
-  test('1 \+ 2 は 3 になること', () \=\> {  
+describe('sum function', () => {  
+  test('1 + 2 は 3 になること', () => {  
     expect(sum(1, 2)).toBe(3);  
   });
 
-  it('負の数の足し算が正しく行われること', () \=\> {  
-    expect(sum(-1, \-5)).toBe(-6);  
+  it('負の数の足し算が正しく行われること', () => {  
+    expect(sum(-1, -5)).toBe(-6);  
   });  
 });
 ```
@@ -143,7 +143,7 @@ describe('sum function', () \=\> {
 ```
     PASS  tests/sum.test.ts  
      sum function  
-       ✓ 1 \+ 2 は 3 になること (2ms)  
+       ✓ 1 + 2 は 3 になること (2ms)  
        ✓ 負の数の足し算が正しく行われること
 
    Test Suites: 1 passed, 1 total  
@@ -153,7 +153,7 @@ describe('sum function', () \=\> {
 
 テストが失敗したときにJestがどのように教えてくれるのかも見てみましょう。tests/sum.test.ts の1つ目のテストを以下のように書き換えてください。
 ```
-test('1 \+ 2 は 3 になること', () \=\> {  
+test('1 + 2 は 3 になること', () \=\> {  
   // 期待する結果をわざと間違えてみる  
   expect(sum(1, 2)).toBe(4);   
 });
@@ -161,7 +161,7 @@ test('1 \+ 2 は 3 になること', () \=\> {
 再度 npm test を実行すると、今度はテストが失敗し、期待した値（Expected）と実際の値（Received）がどのように違ったのかを詳細に表示してくれます。
 ```
  FAIL  tests/sum.test.ts  
-  ● sum function › 1 \+ 2 は 3 になること
+  ● sum function › 1 + 2 は 3 になること
 
     expect(received).toBe(expected) // Object.is equality
 
@@ -197,19 +197,19 @@ function getNull() {
 
 // ショッピングリストの配列を返す  
 function getShoppingList() {  
-  return \['milk', 'bread', 'eggs'\];  
+  return ['milk', 'bread', 'eggs'\];  
 }
 
 // ユーザー登録関数（バリデーション付き）  
 function registerUser(username: string) {  
-  if (\!username || username.length \< 3\) {  
+  if (!username || username.length < 3) {  
     throw new Error('Username must be at least 3 characters long.');  
   }  
   return { username, registered: true };  
 }
 
 // CommonJS形式でエクスポート  
-module.exports \= {  
+module.exports = {  
   createUser,  
   isUserActive,  
   getNull,  
@@ -241,14 +241,14 @@ const {
   getNull,  
   getShoppingList,  
   registerUser,  
-} \= require('../src/matcher-utils');
+} = require('../src/matcher-utils');
 
 describe('createUser function', () \=\> {  
-  it('正しいnameとageを持つユーザーオブジェクトを生成すること', () \=\> {  
+  it('正しいnameとageを持つユーザーオブジェクトを生成すること', () => {  
     // 期待するオブジェクト  
-    const expectedUser \= { name: 'Taro', age: 20 };  
+    const expectedUser = { name: 'Taro', age: 20 };  
     // 実際のオブジェクト  
-    const actualUser \= createUser('Taro', 20);
+    const actualUser = createUser('Taro', 20);
 
     // 中身が同じなので toEqual は成功する  
     expect(actualUser).toEqual(expectedUser);  
@@ -260,17 +260,17 @@ describe('createUser function', () \=\> {
 ```
 **まとめ:**
 
-* **toBe**: 「これが\*\*まさしく同一人物（モノ）\*\*であるか？」を検証する。プリミティブ値に使う。  
-* **toEqual**: 「これが**見た目や中身が全く同じ**であるか？」を検証する。オブジェクトや配列に使う。
+* **toBe**: 「これが **まさしく同一人物（モノ）** であるか？」を検証する。プリミティブ値に使う。  
+* **toEqual**: 「これが **見た目や中身が全く同じ** であるか？」を検証する。オブジェクトや配列に使う。
 
-#### **4.2. toBeTruthy / toBeFalsy / toBeNull \- 状態のテスト**
+#### **4.2. toBeTruthy / toBeFalsy / toBeNull - 状態のテスト**
 
 if文の条件のように、値が true や false として扱われるかを検証します。
 
 **tests/matcher-utils.test.ts (追記)**
 ```
-describe('State Matchers', () \=\> {  
-  it('isUserActiveはTruthyな値を返すこと', () \=\> {  
+describe('State Matchers', () => {  
+  it('isUserActiveはTruthyな値を返すこと', () => {  
     // isUserActive() の返り値 (true) は truthy  
     expect(isUserActive()).toBeTruthy();  
   });
@@ -283,41 +283,41 @@ describe('State Matchers', () \=\> {
   });  
 });
 ```
-#### **4.3. toContain \- 配列のテスト**
+#### **4.3. toContain - 配列のテスト**
 
 配列に特定の要素が含まれているかを検証します。
 
 **tests/matcher-utils.test.ts (追記)**
 ```
-describe('getShoppingList function', () \=\> {  
-  it('ショッピングリストに "milk" が含まれていること', () \=\> {  
-    const list \= getShoppingList();  
+describe('getShoppingList function', () => {  
+  it('ショッピングリストに "milk" が含まれていること', () => {  
+    const list = getShoppingList();  
     expect(list).toContain('milk');  
   });
 
-  it('ショッピングリストに "butter" が含まれていないこと', () \=\> {  
-    const list \= getShoppingList();  
+  it('ショッピングリストに "butter" が含まれていないこと', () => {  
+    const list = getShoppingList();  
     // .not でマッチャーを否定  
     expect(list).not.toContain('butter');  
   });  
 });
 ```
-#### **4.4. toThrow \- 例外のテスト**
+#### **4.4. toThrow - 例外のテスト**
 
 特定の条件下で関数が正しくエラーを投げるかを検証します。
 
 **tests/matcher-utils.test.ts (追記)**
 ```
-describe('registerUser function', () \=\> {  
-  it('ユーザー名が短すぎる場合にエラーをスローすること', () \=\> {  
+describe('registerUser function', () => {  
+  it('ユーザー名が短すぎる場合にエラーをスローすること', () => {  
     // expectの中は関数を呼び出す無名関数にするのがポイント  
-    expect(() \=\> {  
+    expect(() => {  
       registerUser('ab');  
     }).toThrow('Username must be at least 3 characters long.');  
   });
 
-  it('有効なユーザー名の場合はエラーをスローしないこと', () \=\> {  
-    expect(() \=\> {  
+  it('有効なユーザー名の場合はエラーをスローしないこと', () => {  
+    expect(() => {  
       registerUser('valid-user');  
     }).not.toThrow();  
   });  
@@ -336,12 +336,12 @@ describe('registerUser function', () \=\> {
   デバッグ中など、特定のテストケースに集中したい場合は、test や it の後ろに .only を付けます。  
   // このテストファイルでは、このテストケースだけが実行される  
 ```
-  it.only('ショッピングリストに "milk" が含まれていること', () \=\> {  
-    const list \= getShoppingList();  
+  it.only('ショッピングリストに "milk" が含まれていること', () => {  
+    const list = getShoppingList();  
     expect(list).toContain('milk');  
   });
 
-  it('ショッピングリストに "butter" が含まれていないこと', () \=\> {  
+  it('ショッピングリストに "butter" が含まれていないこと', () => {  
     // ...  
   });  
 ```
@@ -351,7 +351,7 @@ describe('registerUser function', () \=\> {
   まだ実装が完了していない、あるいは何らかの理由で一時的に失敗させておきたくないテストがある場合は、.skip を付けます。  
   // このテストは実行されず、「skipped」として報告される  
 ```
-  it.skip('未実装の機能に関するテスト', () \=\> {  
+  it.skip('未実装の機能に関するテスト', () => {  
     // ...  
   });
 ```
@@ -392,7 +392,7 @@ Jestには、テストカバレッジを計測する機能が組み込まれて�
 ```
    "scripts": {  
      "test": "jest",  
-     "test:coverage": "jest \--coverage"  
+     "test:coverage": "jest --coverage"  
    },
 ```
 2. カバレッジ計測を実行する  
