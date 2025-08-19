@@ -106,11 +106,11 @@
    **src/sum.ts** 
 ```
    function sum(a: number, b: number): number {  
-     return a \+ b;  
+     return a + b;  
    }
 
    // CommonJS形式で関数をエクスポートします  
-   module.exports \= { sum };
+   module.exports = { sum };
 ```
 2. テストコードを作成します。  
    次に、tests ディレクトリの中に sum.test.ts というファイル名でテストファイルを作成します。  
