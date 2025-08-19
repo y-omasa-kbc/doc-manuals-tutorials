@@ -243,7 +243,7 @@ const {
   registerUser,  
 } = require('../src/matcher-utils');
 
-describe('createUser function', () \=\> {  
+describe('createUser function', () => {  
   it('正しいnameとageを持つユーザーオブジェクトを生成すること', () => {  
     // 期待するオブジェクト  
     const expectedUser = { name: 'Taro', age: 20 };  
@@ -275,7 +275,7 @@ describe('State Matchers', () => {
     expect(isUserActive()).toBeTruthy();  
   });
 
-  it('getNullはnullを返すこと', () \=\> {  
+  it('getNullはnullを返すこと', () => {  
     // getNull() の返り値は null  
     expect(getNull()).toBeNull();  
     // null は falsy  
