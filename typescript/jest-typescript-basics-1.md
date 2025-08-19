@@ -78,7 +78,7 @@
    {  
      "compilerOptions": {  
        // ... 他の設定 ...  
-       "types": \["node", "jest"\],  
+       "types": ["node", "jest"],  
        // ... 他の設定 ...  
      }  
    }
