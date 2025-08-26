@@ -125,9 +125,9 @@ function processData(data: string[], callback: (item: string) => void) {
 }
 
 module.exports = { processData };
-
+```
 **tests/callback.test.ts**
-
+```TypeScript
 const { processData } = require('../src/callback');
 
 describe('processData function', () => {  
