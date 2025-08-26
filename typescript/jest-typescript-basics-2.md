@@ -36,7 +36,7 @@ beforeEach を使えば、各テストの実行前に必ず決まった状態に
 ショッピングカートのクラスを例に、より実践的な使い方を見てみましょう。
 
 **src/ShoppingCart.ts**
-
+```TypeScript
 interface Item {  
   name: string;  
   price: number;  
@@ -87,7 +87,7 @@ describe('ShoppingCart', () => {
     expect(cart.getTotal()).toBe(270);  
   });  
 });
-
+```
 このテストファイルだけを実行するには、ターミナルで以下のコマンドを入力します。
 
 npm test tests/ShoppingCart.test.ts
@@ -117,7 +117,7 @@ npm test tests/ShoppingCart.test.ts
 コールバック関数を引数に取る関数をテストする例を見てみましょう。
 
 **src/callback.ts**
-
+```TypeScript
 function processData(data: string[], callback: (item: string) => void) {  
   data.forEach(item => {  
     callback(item.toUpperCase());  
@@ -149,7 +149,7 @@ describe('processData function', () => {
     expect(mockCallback.mock.calls[1][0]).toBe('B');  
   });  
 });
-
+```
 このテストファイルだけを実行するには、ターミナルで以下のコマンドを入力します。
 
 npm test tests/callback.test.ts
