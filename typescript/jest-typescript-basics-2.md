@@ -59,9 +59,9 @@ class ShoppingCart {
 }
 
 module.exports = { ShoppingCart };
-
+```
 **tests/ShoppingCart.test.ts**
-
+```TypeScript
 const { ShoppingCart } = require('../src/ShoppingCart');
 
 describe('ShoppingCart', () => {  
