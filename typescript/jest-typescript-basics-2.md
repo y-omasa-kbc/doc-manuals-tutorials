@@ -89,9 +89,9 @@ describe('ShoppingCart', () => {
 });
 ```
 このテストファイルだけを実行するには、ターミナルで以下のコマンドを入力します。
-
+```
 npm test tests/ShoppingCart.test.ts
-
+```
 この例では、beforeEach のおかげで、3つのテストケースはそれぞれ完全に独立しています。2つ目のテストで Apple を追加しても、3つ目のテストが始まる前には新しい空のカートが用意されるため、テストが互いに影響を及ぼすことはありません。これにより、信頼性の高いテストを書くことができます。
 
 ## **3. モック関数 (Mock Functions)**
@@ -171,7 +171,7 @@ JavaScriptは非同期処理を見つけると、その処理の完了を待た�
 ユーザー情報を取得する非同期関数を考えます。
 
 **src/userAPI.ts**
-
+```TypeScript
 interface User {  
   id: number;  
   name: string;  
@@ -190,13 +190,13 @@ const fetchUser = (userId: number): Promise<User> => {
 };
 
 module.exports = { fetchUser };
-
+```
 #### **テストコード**
 
 テストコード側で async/await を使って、非同期処理が終わるのを待ってから結果を検証します。
 
 **tests/userAPI.test.ts**
-
+```TypeScript
 const { fetchUser } = require('../src/userAPI');
 
 describe('fetchUser function', () => {  
@@ -212,7 +212,7 @@ describe('fetchUser function', () => {
     await expect(fetchUser(999)).rejects.toThrow('User not found');  
   });  
 });
-
+```
 このテストファイルだけを実行するには、ターミナルで以下のコマンドを入力します。
 
 npm test tests/userAPI.test.ts
@@ -252,7 +252,7 @@ await expect(fetchUser(999)).rejects.toThrow('User not found'); の行は、非�
 #### **テスト対象コード**
 
 **src/apiClient.ts**
-
+```TypeScript
 // 本来は外部APIと通信するクライアントだが、今回はダミー  
 class ApiClient {  
   async fetchWeather(city: string): Promise<{ weather: string; temp: number }> {  
@@ -264,9 +264,9 @@ class ApiClient {
 }
 
 module.exports = { ApiClient };
-
+```
 **src/weatherService.ts**
-
+```TypeScript
 const { ApiClient } = require('./apiClient');
 
 class WeatherService {  
@@ -293,7 +293,7 @@ class WeatherService {
 }
 
 module.exports = { WeatherService };
-
+```
 ### **テスト要件**
 
 * **ApiClient を jest.mock() を使ってモック化してください。**  
