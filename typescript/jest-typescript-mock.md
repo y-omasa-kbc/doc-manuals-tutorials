@@ -32,13 +32,14 @@ Jest には、モックを作成するための強力な機能がいくつか用
 このモック関数は、**「何回呼び出されたか」「どんな引数で呼び出されたか」**などを記録する特殊な能力を持っています。
 
 **例: コールバック関数をテストする**
-
+```typescript  
 // a.ts  
 export function processCallback(items: number[], callback: (item: number) => void) {  
   items.forEach(item => {  
     callback(item * 2);  
   });  
-}  
+}
+```  
 ```typescript  
 // a.test.ts  
 import { processCallback } from './a';
