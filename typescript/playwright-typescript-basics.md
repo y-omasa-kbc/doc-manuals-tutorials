@@ -50,6 +50,7 @@ Playwrightは、Microsoftが開発したモダンなE2Eテストフレームワ�
 3. PlaywrightのPythonライブラリと、テストフレームワークであるpytestをインストールします。  
    ```
    pip install playwright pytest
+   pip install pytest-playwright
     ```
 4. Playwrightがブラウザを操作するために必要な実行ファイルをインストールします。  
    ```
