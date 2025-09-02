@@ -77,7 +77,7 @@ from playwright.sync_api import Page, expect
 # pytest-playwrightプラグインが、引数に `page` オブジェクトを自動で渡してくれます。  
 def test_access_playwright_and_check_title(page: Page):  
     # 1. 指定したURLにアクセスする  
-    page.goto("[https://playwright.dev/](https://playwright.dev/)")
+    page.goto("https://playwright.dev/")
 
     # 2. ページのタイトルが特定の値であることを検証する  
     # expect関数で検証（アサーション）を行います。  
@@ -143,7 +143,7 @@ from playwright.sync_api import Page, expect
 
 def test_click_get_started_link(page: Page):  
     # Playwright公式サイトにアクセス  
-    page.goto("[https://playwright.dev/](https://playwright.dev/)")
+    page.goto("https://playwright.dev/")
 
     # 要素を特定してクリックする  
     # get_by_roleは、要素の役割（role）に基づいて要素を特定する推奨される方法です。  
@@ -250,7 +250,7 @@ class PlaywrightTests(unittest.TestCase):
     # 'test_'で始まるメソッドがテストケースとして認識される  
     def test_playwright_website_title(self):  
         # Playwright公式サイトにアクセス  
-        self.page.goto("[https://playwright.dev/](https://playwright.dev/)")
+        self.page.goto("[ttps://playwright.dev/")
 
         # ページタイトルを取得  
         title = self.page.title()
