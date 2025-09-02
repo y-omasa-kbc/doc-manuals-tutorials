@@ -114,14 +114,17 @@ pytest
 ### **テストレポートの確認**
 
 Playwrightの素晴らしい機能の1つが、詳細なHTMLレポートです。pytestでレポートを生成するには、実行時にオプションを追加します。
+
+あらかじめhtml出力機能をインストールします。
 ```
-pytest --output=test-results/test-report.html --reporter=html
+pip install pytest-html
 ```
-テスト実行後、以下のコマンドでレポートを表示できます。
+パラメタでHTML出力を指定します。
 ```
-playwright show-report test-results/test-report.html
+ppytest --html=report.html
 ```
-コマンドを実行すると、自動でブラウザが立ち上がり、テスト結果のレポートが表示されます。
+
+テスト結果のレポートがWebブラウザで確認できます。
 
 ## **5. Webページの要素を操作する**
 
