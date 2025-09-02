@@ -121,7 +121,7 @@ pip install pytest-html
 ```
 パラメタでHTML出力を指定します。
 ```
-ppytest --html=report.html
+pytest --html=report.html
 ```
 
 テスト結果のレポートがWebブラウザで確認できます。
@@ -184,9 +184,9 @@ codegen は、**ブラウザ上で行った操作を自動でPythonのテスト�
 
 以下のコマンドを実行してみてください。--target pythonオプションでPythonコードを指定します。
 ```
-playwright codegen --target python -o "tests/generated_test.py" [https://playwright.dev/](https://playwright.dev/)
+playwright codegen --target python -o "generated_test.py" https://playwright.dev/
 ```
-すると、ChromiumブラウザとPlaywright Inspectorという2つのウィンドウが立ち上がります。ブラウザ上で行った操作がリアルタイムでコードとして記録され、指定したファイル（この場合はtests/generated_test.py）に保存されます。
+すると、ChromiumブラウザとPlaywright Inspectorという2つのウィンドウが立ち上がります。ブラウザ上で行った操作がリアルタイムでコードとして記録され、指定したファイル（この場合はgenerated_test.py）に保存されます。
 
 ### **2. Trace Viewer (トレースビューア)**
 
@@ -253,7 +253,7 @@ class PlaywrightTests(unittest.TestCase):
     # 'test_'で始まるメソッドがテストケースとして認識される  
     def test_playwright_website_title(self):  
         # Playwright公式サイトにアクセス  
-        self.page.goto("[ttps://playwright.dev/")
+        self.page.goto("https://playwright.dev/")
 
         # ページタイトルを取得  
         title = self.page.title()
