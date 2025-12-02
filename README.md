@@ -61,6 +61,7 @@
 - [フォームのGETメソッドとPOSTメソッドの基本](general/web/form-get-post.md)
 - [SSRとSPAの基礎知識](general/web/ssr-spa-basics.md)
 - [Content Security Policy (CSP) の基礎](general/web/content-security-policy.md)
+- [JWTの基礎(Python版)](general/web/jwt-basics-python.md)
 
 ### Windows関連
 
