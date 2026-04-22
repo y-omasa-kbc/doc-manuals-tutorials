@@ -189,152 +189,377 @@ webauthn ライブラリのバージョンアップに伴い、JSON変換には 
 
 **app.py の作成:**
 ```python
-from flask import Flask, render_template, request, jsonify, session, Response  
-from webauthn import (  
-    generate_registration_options,  
-    verify_registration_response,  
-    generate_authentication_options,  
-    verify_authentication_response,  
-)  
-# JSON変換用のヘルパー関数をインポート  
-from webauthn.helpers import bytes_to_base64url, base64url_to_bytes, options_to_json  
-from webauthn.helpers.structs import (  
-    AuthenticatorSelectionCriteria,  
-    UserVerificationRequirement,  
-    AuthenticatorAttachment,  
-)  
+"""
+PassKey (WebAuthn) ハンズオン - サーバーサイド実装
+"""
+
+from flask import Flask, render_template, request, jsonify, session, Response
+from webauthn import (
+    generate_registration_options,
+    verify_registration_response,
+    generate_authentication_options,
+    verify_authentication_response,
+)
+from webauthn.helpers import bytes_to_base64url, base64url_to_bytes, options_to_json
+from webauthn.helpers.structs import (
+    AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+)
 import os
+import sqlite3
 
-app = Flask(__name__)  
-app.secret_key = os.urandom(32)  # セッション用の秘密鍵
+# ============================================================
+# Flask アプリケーション初期化
+# ============================================================
+app = Flask(__name__)
+# セッションデータの改ざん防止用の秘密鍵（32バイトのランダム値）
+# 本番環境では固定値を使用すること（再起動でセッションが切れないように）
+app.secret_key = os.urandom(32)
 
-# --- 簡易データベース（本来はDBを使用） ---  
-# ユーザー情報: { "username": UserObject }  
-users_db = {}  
-# ユーザーごとの認証器（公開鍵）リスト: { "username": [CredentialObject, ...] }  
-credentials_db = {}
+# ============================================================
+# Relying Party (RP) 設定
+# ============================================================
+# RP_ID: サービスの一意な識別子（ドメイン名）
+#   - 登録時とログイン時で一致している必要がある
+#   - localhost開発時は "localhost" を使用
+#   - 本番環境では "example.com" のようなドメインを指定
+RP_ID = "localhost"
 
-# RP（サービス提供者）の設定  
-RP_ID = "localhost"  
-RP_NAME = "Passkey Hands-on Class"  
+# RP_NAME: ユーザーに表示されるサービス名
+#   - 認証器の登録画面で「example.comにPassKeyを登録しますか？」のように表示される
+RP_NAME = "Passkey Hands-on Class"
+
+# ORIGIN: サーバーのオリジン（プロトコル + ドメイン + ポート）
+#   - 暗号器が生成するclientDataJSON内のoriginと一致する必要がある
+#   - 開発時は http、本番環境では https が必須
 ORIGIN = "http://localhost:5000"
 
-@app.route('/')  
-def index():  
+# ALLOWED_ORIGINS: 許可するオリジンのリスト
+#   - localhostと127.0.0.1の両方に対応するためリストで指定
+#   - 検証時に暗号器から送られてきたoriginがこのリストに含まれているかチェック
+ALLOWED_ORIGINS = ["http://localhost:5000", "http://127.0.0.1:5000"]
+
+# ============================================================
+# SQLite データベース設定
+# ============================================================
+# PassKeyでは以下の情報を永続的に保存する必要がある:
+#   1. ユーザー情報（ユーザー名、表示名、一意なID）
+#   2. 認証器情報（credential_id、公開鍵、署名カウンター）
+#
+# 重要: 秘密鍵は暗号器内にのみ保存され、サーバーには保存されない
+#       サーバーが持つのは公開鍵のみ（これによりサーバー漏洩時も安全）
+DB_PATH = "passkey.db"
+
+
+def get_db():
+    """
+    SQLiteデータベースへの接続を取得するヘルパー関数
+
+    row_factory=sqlite3.Row を設定することで、
+    結果を辞書のように cur["カラム名"] でアクセス可能にする
+    """
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    """
+    データベースの初期化（テーブル作成）
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            display_name TEXT
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS credentials (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            public_key BLOB NOT NULL,
+            sign_count INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+# アプリケーション起動時にデータベースを初期化
+init_db()
+
+
+# ============================================================
+# ルート: トップページ
+# ============================================================
+@app.route('/')
+def index():
+    """
+    HTMLテンプレートを返す
+    登録・ログインのUIを提供
+    """
     return render_template('index.html')
 
-@app.route('/register/options', methods=['POST'])  
-def register_options():  
-    try:  
-        username = request.json.get('username')  
-        if not username:  
-             return jsonify({"status": "failed", "message": "ユーザー名が必要です"}), 400  
-          
-        # ユーザーが存在しない場合は作成（簡易実装）  
-        if username not in users_db:  
-            users_db[username] = {  
-                "id": os.urandom(32), # 一意なバイト列ID  
-                "name": username,  
-                "display_name": username  
-            }  
-          
-        user = users_db[username]
 
-        # WebAuthnの登録オプション生成  
-        options = generate_registration_options(  
-            rp_id=RP_ID,  
-            rp_name=RP_NAME,  
-            user_id=user["id"],  
-            user_name=user["name"],  
-            authenticator_selection=AuthenticatorSelectionCriteria(  
-                user_verification=UserVerificationRequirement.PREFERRED,  
-                authenticator_attachment=AuthenticatorAttachment.PLATFORM # 指紋認証など内蔵器を利用  
-            )  
+# ============================================================
+# 登録フロー ステップ1: 登録オプションの生成
+# ============================================================
+@app.route('/register/options', methods=['POST'])
+def register_options():
+    try:
+        # クライアントからユーザー名を取得
+        username = request.json.get('username')
+        if not username:
+            return jsonify({"status": "failed", "message": "ユーザー名が必要です"}), 400
+
+        # --- ユーザー情報の管理 ---
+        # 新規ユーザーの場合はデータベースに作成
+        # 既存ユーザーの場合は既存の情報を取得
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM users WHERE name = ?", (username,))
+        user = cur.fetchone()
+
+        if not user:
+            # 新規ユーザー作成
+            # user_id: 32バイトのランダム値をBase64URL形式に変換
+            #   - 暗号器に渡すユーザー識別子
+            #   - 推測不可能な値である必要がある
+            user_id = bytes_to_base64url(os.urandom(32))
+            cur.execute(
+                "INSERT INTO users (id, name, display_name) VALUES (?, ?, ?)",
+                (user_id, username, username)
+            )
+            conn.commit()
+
+            # 作成したユーザー情報を再取得
+            cur.execute("SELECT * FROM users WHERE name = ?", (username,))
+            user = cur.fetchone()
+
+        conn.close()
+
+        # --- WebAuthn登録オプションの生成 ---
+        # このオプションがブラウザ→暗号器に渡され、鍵生成の指示となる
+        options = generate_registration_options(
+            rp_id=RP_ID,           # サービスの識別子（ドメイン）
+            rp_name=RP_NAME,       # サービスの表示名
+            user_id=base64url_to_bytes(user["id"]),  # ユーザーの一意なID（バイト列に変換）
+            user_name=user["name"],                  # ユーザー名
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                # user_verification: ユーザー確認（指紋・顔認証など）の要求レベル
+                #   PREFERRED: 対応していれば使用する（デフォルト推奨）
+                #   REQUIRED: 必須（対応していない認証器は使用不可）
+                #   DISCOURAGED: 使用しない（PINのみなど）
+                user_verification=UserVerificationRequirement.PREFERRED
+            )
         )
 
-        # 検証用にチャレンジをセッションに保存  
-        session['challenge'] = bytes_to_base64url(options.challenge)  
-          
-        # JSON化してクライアントへ（Content-Typeを明示）  
-        return Response(options_to_json(options), mimetype='application/json')  
-          
-    except Exception as e:  
-        print(f"Error in register_options: {e}")  
-        return jsonify({"status": "error", "message": str(e)}), 500
+        # challengeをセッションに保存
+        # 次のリクエスト（/register/verify）で検証に使用する
+        # bytes_to_base64url: バイト列をURLセーフなBase64文字列に変換
+        session['challenge'] = bytes_to_base64url(options.challenge)
 
-@app.route('/register/verify', methods=['POST'])  
-def register_verify():  
-    try:  
-        username = request.json.get('username')  
-        challenge = session.get('challenge')  
-          
-        # 署名の検証  
-        verification = verify_registration_response(  
-            credential=request.json,  
-            expected_challenge=base64url_to_bytes(challenge),  
-            expected_origin=ORIGIN,  
-            expected_rp_id=RP_ID,  
-        )  
-          
-        # 検証成功！公開鍵などを保存  
-        if username not in credentials_db:  
-            credentials_db[username] = []  
-              
-        credentials_db[username].append(verification.credential_id)  
-        # ※本来は verification.credential_public_key もDBに保存します  
-        print(f"Registered Credential ID: {verification.credential_id}")  
-          
-        return jsonify({"status": "ok", "message": "登録完了！"})  
-          
-    except Exception as e:  
-        print(f"Error in register_verify: {e}")  
-        return jsonify({"status": "failed", "message": str(e)}), 400
-
-@app.route('/login/options', methods=['POST'])  
-def login_options():  
-    try:  
-        username = request.json.get('username')  
-          
-        options = generate_authentication_options(  
-            rp_id=RP_ID,  
-            user_verification=UserVerificationRequirement.PREFERRED,  
-        )  
-          
-        session['challenge'] = bytes_to_base64url(options.challenge)  
-        session['login_user'] = username   
-          
+        # オプションをJSON形式でクライアントに返す
+        # クライアントはこのJSONを navigator.credentials.create() に渡す
         return Response(options_to_json(options), mimetype='application/json')
 
-    except Exception as e:  
-        print(f"Error in login_options: {e}")  
+    except Exception as e:
+        print(f"Error in register_options: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/login/verify', methods=['POST'])  
-def login_verify():  
-    try:  
-        challenge = session.get('challenge')  
+
+# ============================================================
+# 登録フロー ステップ2: 登録レスポンスの検証と保存
+# ============================================================
+@app.route('/register/verify', methods=['POST'])
+def register_verify():
+    try:
+        # クライアントからユーザー名と認証データを受信
+        username = request.json.get('username')
+        # 登録時にセッションに保存したchallengeを取得
+        challenge = session.get('challenge')
+
+        if not username or not challenge:
+            return jsonify({"status": "failed", "message": "セッションエラー"}), 400
+
+        # --- 登録レスポンスの検証 ---
+        # webauthnライブラリが以下の検証を自動で行う:
+        #   1. clientDataJSONの解析とchallenge一致確認
+        #   2. originの一致確認（ALLOWED_ORIGINSリストと照合）
+        #   3. rp_id_hashの一致確認
+        #   4. attestationObjectの解析と署名検証
+        #   5. ユーザープレゼンス（UP）フラグの確認
+        verification = verify_registration_response(
+            credential=request.json,                        # クライアントから送信された認証データ
+            expected_challenge=base64url_to_bytes(challenge),  # 期待するchallenge（バイト列に変換）
+            expected_origin=ALLOWED_ORIGINS,                # 許可するオリジンのリスト
+            expected_rp_id=RP_ID,                           # 期待するrp_id
+        )
+
+        # --- 公開鍵の保存 ---
+        # 検証に成功したら、暗号器から送られてきた公開鍵をデータベースに保存
+        # この公開鍵は後のログイン時の署名検証に使用される
+        conn = get_db()
+        cur = conn.cursor()
+
+        # ユーザーIDを取得
+        cur.execute("SELECT id FROM users WHERE name = ?", (username,))
+        user = cur.fetchone()
+        if not user:
+            conn.close()
+            return jsonify({"status": "failed", "message": "ユーザーが見つかりません"}), 400
+
+        # 認証器情報をデータベースに保存
+        # verification.credential_id: 認証器の一意な識別子
+        # verification.credential_public_key: 公開鍵（COSE形式のバイナリ）
+        # verification.sign_count: 署名カウンター（初期値）
+        cur.execute("""
+            INSERT INTO credentials (id, user_id, public_key, sign_count)
+            VALUES (?, ?, ?, ?)
+        """, (
+            bytes_to_base64url(verification.credential_id),  # credential_idをBase64URLに変換して保存
+            user["id"],                                       # ユーザーID
+            verification.credential_public_key,              # 公開鍵（バイナリそのまま保存）
+            verification.sign_count                          # 署名カウンター
+        ))
+        conn.commit()
+        conn.close()
+
+        print(f"Registered Credential ID: {bytes_to_base64url(verification.credential_id)}")
+
+        return jsonify({"status": "ok", "message": "登録完了！"})
+
+    except Exception as e:
+        print(f"Error in register_verify: {e}")
+        return jsonify({"status": "failed", "message": str(e)}), 400
+
+
+# ============================================================
+# 認証フロー ステップ1: 認証オプションの生成
+# ============================================================
+@app.route('/login/options', methods=['POST'])
+def login_options():
+    try:
+        username = request.json.get('username')
+        if not username:
+            return jsonify({"status": "failed", "message": "ユーザー名が必要です"}), 400
+
+        # ユーザーの存在確認
+        # 存在しないユーザーではログインできない
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM users WHERE name = ?", (username,))
+        user = cur.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({"status": "failed", "message": "ユーザーが見つかりません"}), 400
+
+        # --- WebAuthn認証オプションの生成 ---
+        options = generate_authentication_options(
+            rp_id=RP_ID,           # サービスの識別子
+            user_verification=UserVerificationRequirement.PREFERRED  # ユーザー確認の要求レベル
+        )
+
+        # challengeをセッションに保存（登録時と同様）
+        # ログイン時の署名検証で使用する
+        session['challenge'] = bytes_to_base64url(options.challenge)
+        # ログイン試行中のユーザー名をセッションに保存
+        session['login_user'] = username
+
+        return Response(options_to_json(options), mimetype='application/json')
+
+    except Exception as e:
+        print(f"Error in login_options: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ============================================================
+# 認証フロー ステップ2: 認証レスポンスの検証
+# ============================================================
+@app.route('/login/verify', methods=['POST'])
+def login_verify():
+    try:
+        # セッションからchallengeとユーザー名を取得
+        challenge = session.get('challenge')
         username = session.get('login_user')
 
-        # 署名の検証  
-        # 注意: 本来はDBから取得した公開鍵を credential_public_key に渡す必要があります  
-        verification = verify_authentication_response(  
-            credential=request.json,  
-            expected_challenge=base64url_to_bytes(challenge),  
-            expected_origin=ORIGIN,  
-            expected_rp_id=RP_ID,  
-            credential_public_key=b'', # ★ここが空だと厳密な署名検証はできませんが、フローの確認は可能です  
-            credential_current_sign_count=0,  
-        )  
-          
-        return jsonify({"status": "ok", "message": f"ログイン成功！ようこそ {username} さん"})  
-          
-    except Exception as e:  
-        print(f"Validation Error: {e}")  
-        # 公開鍵がないためエラーになりますが、ハンズオン進行のためメッセージを調整  
-        return jsonify({"status": "failed", "message": f"検証エラー: {str(e)}（※DB連携未実装のため想定内です）"}), 400
+        if not username or not challenge:
+            return jsonify({"status": "failed", "message": "セッションエラー"}), 400
 
-if __name__ == '__main__':  
+        # クライアントから送信された認証データ
+        credential_data = request.json
+        credential_id = credential_data.get("id")
+
+        # --- 公開鍵の取得 ---
+        # credential_idをもとに、データベースから該当する認証器の公開鍵を取得
+        # この公開鍵で署名を検証する
+        conn = get_db()
+        cur = conn.cursor()
+
+        # credentialsテーブルから公開鍵とsign_countを取得
+        # usersテーブルとJOINしてユーザー名も取得
+        cur.execute("""
+            SELECT c.id, c.public_key, c.sign_count, u.name
+            FROM credentials c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.id = ? AND u.name = ?
+        """, (credential_id, username))
+        cred = cur.fetchone()
+
+        if not cred:
+            conn.close()
+            return jsonify({"status": "failed", "message": "認証器が見つかりません"}), 400
+
+        # --- 署名の検証 ---
+        # webauthnライブラリが以下の検証を自動で行う:
+        #   1. clientDataJSONの解析とchallenge一致確認
+        #   2. originの一致確認
+        #   3. rp_id_hashの一致確認
+        #   4. authenticatorDataの解析
+        #   5. 公開鍵による署名検証 ← 核心部分
+        #   6. sign_countの増加確認（リプレイ攻撃防止）
+        #   7. ユーザープレゼンス（UP）フラグの確認
+        verification = verify_authentication_response(
+            credential=credential_data,                       # クライアントから送信された認証データ
+            expected_challenge=base64url_to_bytes(challenge),    # 期待するchallenge
+            expected_origin=ALLOWED_ORIGINS,                  # 許可するオリジンのリスト
+            expected_rp_id=RP_ID,                             # 期待するrp_id
+            credential_public_key=cred["public_key"],         # 保存済みの公開鍵（署名検証に使用）
+            credential_current_sign_count=cred["sign_count"], # 前回の署名カウンター
+        )
+
+        # --- sign_countの更新 ---
+        # 検証に成功したら、新しいsign_countをデータベースに保存
+        # 次のログイン時にこの値と比較してリプレイ攻撃を検知する
+        cur.execute("UPDATE credentials SET sign_count = ? WHERE id = ?",
+            (verification.new_sign_count, credential_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"status": "ok", "message": f"ログイン成功！ようこそ {username} さん"})
+
+    except Exception as e:
+        print(f"Validation Error: {e}")
+        return jsonify({"status": "failed", "message": f"検証エラー: {str(e)}"}), 400
+
+
+# ============================================================
+# アプリケーション起動
+# ============================================================
+if __name__ == '__main__':
+    # debug=True: 開発用のデバッグモード（コード変更で自動再起動）
+    # 本番環境では debug=False にすること
     app.run(debug=True, port=5000)
+
 ```
 
 ## **第5章：クライアントサイドの実装 (HTML/JS)**
@@ -344,126 +569,229 @@ if __name__ == '__main__':
 **templates/index.html** の作成:  
 キャッシュ対策として、JSファイル読み込み時に ?v=2 を付与しています。  
 ```html
-<!DOCTYPE html>  
-<html lang="ja">  
-<head>  
-    <meta charset="UTF-8">  
-    <title>Passkey Hands-on</title>  
-</head>  
-<body>  
-    <h1>パスキー ハンズオン v2</h1>  
-      
-    <div>  
-        <h2>1. 登録</h2>  
-        <input type="text" id="username" placeholder="ユーザー名">  
-        <button onclick="register()">パスキーを登録</button>  
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Passkey Hands-on</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        h2 { color: #555; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        input {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        button:hover { background-color: #45a049; }
+        .section { margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <h1>パスキー ハンズオン</h1>
+    <p>WebAuthn / PassKey の登録・認証を体験するサンプルアプリケーションです。</p>
+
+    <div class="section">
+        <h2>1. パスキー登録</h2>
+        <p>ユーザー名を入力して「登録」ボタンを押すと、ブラウザの認証機能（Windows Helloなど）が起動し、PassKeyが作成されます。</p>
+        <input type="text" id="username" placeholder="ユーザー名">
+        <button onclick="register()">パスキーを登録</button>
     </div>
 
-    <div>  
-        <h2>2. 認証（ログイン）</h2>  
-        <button onclick="login()">パスキーでログイン</button>  
+    <div class="section">
+        <h2>2. パスキー認証（ログイン）</h2>
+        <p>登録済みのユーザー名を入力して「ログイン」ボタンを押すと、ブラウザの認証機能が起動し、生体認証またはPINによる本人確認が行われます。</p>
+        <input type="text" id="login-username" placeholder="ユーザー名">
+        <button onclick="login()">パスキーでログイン</button>
     </div>
 
-    <!-- type="module" を指定し、キャッシュ対策のクエリパラメータを付与 -->  
-    <script type="module" src="/static/script.js?v=2"></script>  
-</body>  
+    <!--
+        type="module": ESモジュールとして読み込む
+        これにより import 文が有効になり、関数スコープが独立する
+    -->
+    <script type="module" src="/static/script.js"></script>
+</body>
 </html>
+
 ```
 
 **static/script.js** の作成:  
 GitHub製のライブラリ webauthn-json をESM形式でインポートします。  
 
 ```JavaScript
-// ライブラリを直接インポート（ESM形式）  
-// 構文エラーの原因となるMarkdown記法は含めないでください  
+// @github/webauthn-json ライブラリのインポート
+// このライブラリは WebAuthn API のバイナリデータをJSON形式に変換する
+// ブラウザの navigator.credentials API は ArrayBuffer を使用するが、
+// HTTP通信ではJSON形式で送信したいため、変換処理を肩代わりしてくれる
 import { create, get, parseCreationOptionsFromJSON, parseRequestOptionsFromJSON } from 'https://cdn.jsdelivr.net/npm/@github/webauthn-json@2.1.1/dist/esm/webauthn-json.browser-ponyfill.js';
 
-// デバッグ用ログ  
-console.log("Script loaded: v2 (Integrated Version)");
+console.log("Script loaded: PassKey WebAuthn Client");
 
-async function register() {  
-    const username = document.getElementById('username').value;  
+async function register() {
+    const username = document.getElementById('username').value;
     if (!username) return alert("ユーザー名を入力してください");
 
-    try {  
-        console.log("Registering...");  
-        // 1. サーバーからオプション取得  
-        const resp = await fetch('/register/options', {  
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },  
-            body: JSON.stringify({ username })  
-        });  
+    try {
+        console.log("=== 登録フロー開始 ===");
+
+        // ========================================
+        // ステップ1: サーバーから登録オプションを取得
+        // ========================================
+        // サーバーは以下を生成して返す:
+        //   - challenge: ランダムなバイト列（リプレイ攻撃防止）
+        //   - rp.id: サービスの識別子（ドメイン）
+        //   - rp.name: サービスの表示名
+        //   - user.id: ユーザーの一意なID
+        //   - user.name: ユーザー名
+        //   - pubKeyCredParams: 許可する暗号アルゴリズムのリスト
+        const resp = await fetch('/register/options', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
         const options = await resp.json();
 
-        if (options.status === 'failed' || options.status === 'error') {  
-             throw new Error(options.message);  
+        if (options.status === 'failed' || options.status === 'error') {
+             throw new Error(options.message);
         }
 
-        // 2. ブラウザのAPIを呼び出し  
-        // 重要: サーバーからのoptionsを { publicKey: options } の形にラップして渡します  
-        const credential = await create(parseCreationOptionsFromJSON({ publicKey: options }));  
-        console.log("Credential created:", credential);
+        console.log("サーバーから取得したオプション:", options);
 
-        // 3. 署名をサーバーへ送信して検証  
-        const verifyResp = await fetch('/register/verify', {  
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },  
-            body: JSON.stringify({   
-                username: username,  
-                ...credential.toJSON()   
-            })  
-        });  
-          
-        const result = await verifyResp.json();  
+        // ========================================
+        // ステップ2: ブラウザのWebAuthn APIを呼び出し
+        // ========================================
+        // ここで以下の処理が行われる:
+        //   1. ブラウザがOSの認証フレームワークに接続
+        //   2. ユーザーに生体認証（指紋・顔）またはPIN入力を要求
+        //   3. 暗号器（TPM/Secure Enclave等）が鍵ペアを生成
+        //      - 秘密鍵: 暗号器内に安全に保管（外部に出ない）
+        //      - 公開鍵: サーバーに送信するため準備
+        //   4. 暗号器が challenge に署名（秘密鍵で）
+        //   5. credential オブジェクトとして返す
+        //
+        // parseCreationOptionsFromJSON:
+        //   JSON形式のオプションをWebAuthn APIが要求する形式に変換
+        //   （ArrayBufferへの変換など）
+        const credential = await create(parseCreationOptionsFromJSON({ publicKey: options }));
+
+        console.log("暗号器が生成したcredential:", credential);
+        console.log("credential.toJSON():", JSON.stringify(credential.toJSON(), null, 2));
+
+        // ========================================
+        // ステップ3: credentialをサーバーに送信して検証
+        // ========================================
+        // credential.toJSON() の中身:
+        //   {
+        //     id: "credential_id",           // 認証器の一意な識別子
+        //     rawId: "raw_id",               // バイナリIDのBase64URL形式
+        //     type: "public-key",            // 認証方式
+        //     response: {
+        //       clientDataJSON: "...",       // ブラウザが生成したクライアントデータ
+        //                                    // （origin, challenge, typeを含む）
+        //       attestationObject: "..."     // 暗号器の証明書オブジェクト
+        //                                    // （公開鍵、署名、AAGUIDなど）
+        //     }
+        //   }
+        const verifyResp = await fetch('/register/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: username,
+                ...credential.toJSON()
+            })
+        });
+
+        const result = await verifyResp.json();
         alert(result.message);
 
-    } catch (err) {  
-        console.error(err);  
-        alert("登録エラー: " + err.message);  
-    }  
+    } catch (err) {
+        console.error("登録エラー:", err);
+        alert("登録エラー: " + err.message);
+    }
 }
 
-async function login() {  
-    const username = document.getElementById('username').value;  
-      
-    try {  
-        console.log("Logging in...");  
-        // 1. サーバーからオプション取得  
-        const resp = await fetch('/login/options', {  
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },  
-            body: JSON.stringify({ username })  
-        });  
-        const options = await resp.json();  
-          
-        if (options.status === 'failed' || options.status === 'error') {  
-             throw new Error(options.message);  
+async function login() {
+    const username = document.getElementById('login-username').value;
+
+    try {
+        console.log("=== 認証フロー開始 ===");
+
+        // ========================================
+        // ステップ1: サーバーから認証オプションを取得
+        // ========================================
+        // サーバーは以下を生成して返す:
+        //   - challenge: ランダムなバイト列（リプレイ攻撃防止）
+        //   - rp.id: サービスの識別子
+        //   - userVerification: ユーザー確認の要求レベル
+        const resp = await fetch('/login/options', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const options = await resp.json();
+
+        if (options.status === 'failed' || options.status === 'error') {
+             throw new Error(options.message);
         }
 
-        // 2. ブラウザのAPI呼び出し  
-        // 重要: こちらも同様にラップします  
+        console.log("サーバーから取得したオプション:", options);
+
+        // ========================================
+        // ステップ2: ブラウザのWebAuthn APIを呼び出し
+        // ========================================
+        // ここで以下の処理が行われる:
+        //   1. ブラウザがcredential_idに一致するPassKeyを探索
+        //   2. ユーザーに生体認証（指紋・顔）またはPIN入力を要求
+        //   3. 暗号器が challenge に署名（保存済みの秘密鍵で）
+        //   4. credential オブジェクトとして返す
+        //
+        // parseRequestOptionsFromJSON:
+        //   JSON形式のオプションをWebAuthn APIが要求する形式に変換
         const credential = await get(parseRequestOptionsFromJSON({ publicKey: options }));
 
-        // 3. サーバーへ送信  
-        const verifyResp = await fetch('/login/verify', {  
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },  
-            body: JSON.stringify(credential.toJSON())  
-        });  
-          
-        const result = await verifyResp.json();  
+        console.log("暗号器が生成したcredential:", credential);
+
+        // サーバーの検証処理:
+        //   1. credential_idでDBから公開鍵を取得
+        //   2. 公開鍵で署名を検証
+        //      署名が有効 ＝ 正しい秘密鍵を持っている ＝ 本人確認完了
+        //   3. sign_countの増加を確認（リプレイ攻撃防止）
+        const verifyResp = await fetch('/login/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credential.toJSON())
+        });
+
+        const result = await verifyResp.json();
         alert(result.message);
 
-    } catch (err) {  
-        console.error(err);  
-        alert("ログインエラー: " + err.message);  
-    }  
+    } catch (err) {
+        console.error("認証エラー:", err);
+        alert("ログインエラー: " + err.message);
+    }
 }
 
-// type="module" の場合、関数はスコープ内に閉じ込められるため、  
-// HTMLのボタンから呼び出せるように window オブジェクトに明示的に登録します  
-window.register = register;  
+// type="module" の場合、関数はスコープ内に閉じ込められるため、
+// HTMLのボタンから呼び出せるように window オブジェクトに明示的に登録する
+window.register = register;
 window.login = login;
+
 ```
 
 ## **第6章：実行と確認**
