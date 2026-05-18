@@ -60,7 +60,7 @@ Webシステムを開発していると、完了までに時間がかかる「�
 * Azure Functions Core Tools (func CLI)  
 * Postman、curl等のAPIリクエストツール
 
-## **2. ハンズオン演習 - 非同期処理による応答性向上の基本 (60分)**
+## **2. ハンズオン演習 - 非同期処理による応答性向上の基本**
 
 この演習では、シンプルな「Webアンケート受付システム」を構築します。このシステムは、2つの主要なコンポーネントで構成されています。
 
@@ -97,7 +97,7 @@ graph TD
 
 ローカルで Azure Functions を実行するためのプロジェクトを作成する。
 
-1. ローカルPCに作業用フォルダ（例: azure-handson）を作成する。  
+1. ローカルPCに作業用フォルダ（例: azure-queue-handson）を作成する。  
 2. 仮想環境を作成して有効化する。  
    ```
    python -m venv venv
@@ -108,111 +108,103 @@ graph TD
    func init --python
    ```
 
-4. 依存パッケージをインストールする。  
-   ```
-   pip install azure-functions azure-storage-queue
-   ```
 6. `requirements.txt` を開き、以下の内容に書き換える。  
    ```
    azure-functions
    azure-storage-queue
    ```
 
+4. 依存パッケージをインストールする。  
+   ```
+   pip install -r requirements.txt
+   ```
 
-### **ステップ3: HTTP トリガー関数 (受付役) の実装 (15分)**
+### **ステップ3: HTTP トリガー関数 (受付役) の実装**
 
 ユーザーからのリクエストを受け取り、キューにメッセージを追加するHTTPトリガー関数を実装する。
 
 1. `function_app.py` を開き、以下のコードを記述する。  
-   ```python
-   # function_app.py
-   import azure.functions as func
-   import json
-   import base64
-   from azure.storage.queue import QueueClient
+```python
+# function_app.py
+import azure.functions as func
+import os
+import json
+import base64
+from azure.storage.queue import QueueClient
 
-   app = func.FunctionApp()
+app = func.FunctionApp()
 
-   @app.route(route="survey", methods=[func.HttpMethod.POST])
-   def submit_survey(req: func.HttpRequest) -> func.HttpResponse:
-       try:
-           body = req.get_json()
-           print('アンケートリクエスト受信:', body)
+@app.route(route="survey", methods=[func.HttpMethod.POST])
+def submit_survey(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        body = req.get_json()
+        print('アンケートリクエスト受信:', body)
 
-           # 使用するAzure Storageの接続文字列に置換
-           CONNECTION_STRING = "ここにAzure Storageの接続文字列を貼り付け"
-           QUEUE_NAME = "survey-queue"
+        # 使用するAzure Storageの接続文字列に置換
+        CONNECTION_STRING = os.environ["AzureWebJobsStorage"]
+        QUEUE_NAME = "survey-queue"
 
-           # 1. QueueClientのインスタンスを作成
-           queue_client = QueueClient.from_connection_string(CONNECTION_STRING, QUEUE_NAME)
+        # 1. QueueClientのインスタンスを作成
+        queue_client = QueueClient.from_connection_string(CONNECTION_STRING, QUEUE_NAME)
 
-           # 2. キューが存在しない場合は作成
-           queue_client.create_queue()
 
-           # 3. リクエストボディをJSON文字列に変換し、Base64エンコード
-           message_text = json.dumps(body)
-           base64_message = base64.b64encode(message_text.encode('utf-8')).decode('utf-8')
+        # 3. リクエストボディをJSON文字列に変換
+        message_text = json.dumps(body)
 
-           # 4. キューにメッセージを送信
-           queue_client.send_message(base64_message)
-           print(f'メッセージをキューに追加: {message_text}')
+        # 4. キューにメッセージを送信（base64エンコード）
+        encoded_message = base64.b64encode(message_text.encode('utf-8')).decode('utf-8')
+        queue_client.send_message(encoded_message)
+        print(f'メッセージをキューに追加: {message_text}')
 
-           # 5. ユーザーに受付完了の応答を返す
-           return func.HttpResponse(
-               json.dumps({"message": "アンケートの集計処理を受け付けました。"}),
-               status_code=202,
-               mimetype="application/json"
-           )
+        # 5. ユーザーに受付完了の応答を返す
+        return func.HttpResponse(
+            json.dumps({"message": "アンケートの集計処理を受け付けました。"}),
+            status_code=202,
+            mimetype="application/json"
+        )
 
-       except Exception as error:
-           print(error)
-           return func.HttpResponse(
-               json.dumps({"message": "サーバーエラーが発生しました。"}),
-               status_code=500,
-               mimetype="application/json"
-           )
-   ```
+    except Exception as error:
+        print(error)
+        return func.HttpResponse(
+            json.dumps({"message": "サーバーエラーが発生しました。"}),
+            status_code=500,
+            mimetype="application/json"
+        )
+    
+```
 2. CONNECTION_STRING の値を、ステップ1でコピーした自身の接続文字列に置換する。
 
-### **ステップ4: Queue トリガー関数 (集計役) の実装 (20分)**
+### **ステップ4: Queue トリガー関数 (集計役) の実装**
 
 キューを監視し、メッセージが存在すれば自動的に起動して処理するQueueトリガー関数を実装する。
 
 1. `function_app.py` に以下のQueueトリガー関数を追加する。  
-   ```python
-   import time
+```python
+import time
 
-   @app.queue_trigger(arg_name="msg", queue_name="survey-queue", connection="AzureWebJobsStorage")
-   def process_survey(msg: func.QueueMessage) -> None:
-       # Base64デコードして元のJSON文字列に復元
-       message_text = base64.b64decode(msg.get_body().decode('utf-8')).decode('utf-8')
-       print(f'[処理開始] メッセージ受信: {message_text}')
+@app.queue_trigger(arg_name="msg", queue_name="survey-queue", connection="AzureWebJobsStorage")
+def process_survey(msg: func.QueueMessage) -> None:
+    # キューからメッセージを受信
+    message_text = msg.get_body().decode('utf-8')
+    print(f'[Message Received]: {message_text}')
+    print('[Message Erased] ')
 
-       # 時間のかかる集計処理のシミュレーション
-       time.sleep(3)  # 3秒待機
 
-       print('[処理完了] メッセージを削除しました。')
-   ```
+```
 2. `local.settings.json` の `AzureWebJobsStorage` に、ステップ1でコピーした接続文字列を設定する。  
-   ```json
-   {
-     "IsEncrypted": false,
-     "Values": {
-       "AzureWebJobsStorage": "ここにAzure Storageの接続文字列を貼り付け",
-       "FUNCTIONS_WORKER_RUNTIME": "python"
-     }
+```json
+{
+   "IsEncrypted": false,
+   "Values": {
+      "AzureWebJobsStorage": "ここにAzure Storageの接続文字列を貼り付け",
+      "FUNCTIONS_WORKER_RUNTIME": "python"
    }
-   ```
+}
+```
 
 ### **ステップ5: 動作確認 (10分)**
 
 1. **仮想環境の有効化:** ターミナルで仮想環境が有効になっていることを確認する。有効になっていない場合は以下のコマンドを実行する。  
-   ```
-   .venv\Scripts\activate
-   ```
-2. **関数の起動:** azure-handson フォルダのターミナルで以下のコマンドを実行する。  
-   ```
-   func start
    ```
    .venv\Scripts\activate
    ```
