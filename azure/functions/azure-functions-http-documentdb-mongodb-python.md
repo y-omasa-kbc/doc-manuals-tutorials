@@ -89,96 +89,92 @@ graph TD
    }
 ```
 ## **5. ToDo APIの実装 (function_app.py)**
-
-プロジェクトのメインファイルである function_app.py を編集し、ToDoの登録(POST)と取得(GET)の2つのAPIを実装します。2つのAPIはどちらもCosmosDBにアクセスします。そのため、Azure Functions の機能であるバインディングを使用します。
-
-### バインディング (Bindings)
-Azure Functionsにおける「バインディング」は、関数と他のAzureサービス（データベース、ストレージ、メッセージキューなど）との接続を簡素化するための強力な機能です。これにより、開発者は外部サービスとの統合ロジックを自分で書くことなく、データの入出力を行うことができます。
-
-バインディングには主に以下の3種類があります。
-
-*   **トリガー (Trigger)**: 関数を実行するイベントを定義します。HTTPリクエスト、タイマー、データベースの変更、メッセージキューへのメッセージ追加など、様々なイベントをトリガーとして設定できます。今回の演習ではHTTPトリガーを使用しています。
-*   **入力バインディング (Input Binding)**: 関数が外部サービスからデータを読み込む方法を定義します。例えば、HTTPリクエストからデータを取得したり、Cosmos DBのドキュメントを読み込んだり、Blob Storageからファイルを読み込んだりすることができます。
-*   **出力バインディング (Output Binding)**: 関数が処理結果を外部サービスに書き込む方法を定義します。例えば、HTTPレスポンスを返したり、Cosmos DBにドキュメントを書き込んだり、メッセージキューにメッセージを送信したりすることができます。
-
-バインディングは、`function_app.py`内のデコレータ（例: `@app.route`, `@app.blob_output`など）や、`function.json`ファイル（他の言語や一部のPythonシナリオで使用）で定義されます。これにより、関数コードは外部サービスとのやり取りの詳細から解放され、ビジネスロジックに集中できるようになります。
-
 ### コーディング
 
 1. VS Codeのエクスプローラーで function_app.py を開きます。  
 2. 既存のサンプルコードを**すべて削除**し、以下のコードに置き換えます。  
 ```python
-   import azure.functions as func  
-   import logging  
-   import json  
-   import uuid
+import sys
+from pathlib import Path
 
-   # Function Appのインスタンスを作成します。  
-   # http_auth_level=func.AuthLevel.ANONYMOUS は、APIキーなしでアクセスできることを意味します。  
-   app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+venv_path = Path(__file__).parent / "venv" / "Lib" / "site-packages"
+sys.path.append(str(venv_path))
 
-   # ToDo項目を登録する関数 (POST /api/items)  
-   @app.route(route="items", methods=["POST"])  
-   @app.cosmos_db_output(arg_name="newItem",  
-                           database_name="ToDoList",  
-                           container_name="Items",  
-                           connection="CosmosDbConnectionString")  
-   def create_item(req: func.HttpRequest, newItem: func.Out[func.Document]) -> func.HttpResponse:
-       logging.info('Python HTTP trigger function processed a request to create an item.')
+import logging
+import os
+import json
+import pymongo
+from bson import ObjectId
 
-       try:  
-           req_body = req.get_json()  
-       except ValueError:  
-           return func.HttpResponse("Request Body is not a valid JSON.", status_code=400)
+import azure.functions as func
 
-       name = req_body.get('name')  
-       if not name:  
-           return func.HttpResponse("Please pass a 'name' in the request body.", status_code=400)
+# FunctionAppインスタンスを作成
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-       try:  
-           # Cosmos DBのパーティションキー/idとしてユニークなIDを追加  
-           req_body['id'] = str(uuid.uuid4())
+# MongoDBのObjectIdをJSONシリアライズ可能な文字列に変換するカスタムエンコーダー
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
 
-           # 受け取ったJSONデータをCosmos DBドキュメントとしてセット  
-           newItem.set(func.Document.from_dict(req_body))
+# POST /api/tasks : 新しいタスクを作成
+@app.route(route="tasks", methods=["POST"])
+def create_task(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a POST request to /tasks.')
 
-           # レスポンスにはIDを含んだデータを返す  
-           return func.HttpResponse(  
-               body=json.dumps({'message': 'Item created successfully.', 'data': req_body}),  
-               status_code=201,  
-               mimetype="application/json"  
-           )  
-       except Exception as e:  
-           logging.error(f"Error: {e}")  
-           return func.HttpResponse("Error creating item.", status_code=500)
+    try:
+        req_body = req.get_json()
+    except ValueError:
+        return func.HttpResponse("Invalid JSON format in request body.", status_code=400)
 
-   # ToDo項目を一覧取得する関数 (GET /api/items)  
-   @app.route(route="items", methods=["GET"])  
-   @app.cosmos_db_input(arg_name="items",  
-                          database_name="ToDoList",  
-                          container_name="Items",  
-                          connection="CosmosDbConnectionString",  
-                          sql_query="SELECT * from c")  
-   def get_items(req: func.HttpRequest, items: func.DocumentList) -> func.HttpResponse:  
-       logging.info('Python HTTP trigger function processed a request to get items.')
+    # リクエストボディに必須の 'task' フィールドがあるかチェック
+    if 'task' not in req_body:
+        return func.HttpResponse("Bad request. The 'task' field is required.", status_code=400)
 
-       if not items:  
-           return func.HttpResponse("[]", status_code=200, mimetype="application/json")
+    try:
+        connection_string = os.environ["CosmosDBConnectionString"]
+        client = pymongo.MongoClient(connection_string)
+        db = client["TodoDB"]
+        collection = db["Tasks"]
+        
+        result = collection.insert_one(req_body)
+        logging.info(f"Inserted document with id: {result.inserted_id}")
+        
+        # MongoDBが自動生成した_idをレスポンスに含めるため、req_bodyを更新
+        req_body['_id'] = result.inserted_id
+        
+        return func.HttpResponse(
+            body=json.dumps(req_body, cls=JSONEncoder),
+            status_code=201, # 201 Created
+            mimetype="application/json"
+        )
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return func.HttpResponse("An error occurred while processing the request.", status_code=500)
 
-       # Cosmos DBから取得したドキュメントを辞書のリストに変換  
-       items_dict = [item.to_dict() for item in items]
+# GET /api/tasks : 全てのタスクを取得
+@app.route(route="tasks", methods=["GET"])
+def get_tasks(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a GET request to /tasks.')
 
-       return func.HttpResponse(  
-           body=json.dumps(items_dict),  
-           status_code=200,  
-           mimetype="application/json"  
-       )
+    try:
+        connection_string = os.environ["CosmosDBConnectionString"]
+        client = pymongo.MongoClient(connection_string)
+        db = client["TodoDB"]
+        collection = db["Tasks"]
+
+        tasks = list(collection.find({}))
+        
+        return func.HttpResponse(
+            body=json.dumps(tasks, cls=JSONEncoder),
+            status_code=200,
+            mimetype="application/json"
+        )
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        return func.HttpResponse("An error occurred while processing the request.", status_code=500)
 ```
-   **【解説】**  
-   * @app.route(): 関数のトリガーとなるHTTPエンドポイントを定義します。route="items"は、/api/itemsというURLに対応します。methodsで許可するHTTPメソッドを指定します。  
-   * @app.cosmos_db_output(): **出力バインディング**を定義します。関数が返すデータをCosmos DBに書き込むよう設定しています。  
-   * @app.cosmos_db_input(): **入力バインディング**を定義します。sql_queryで指定したクエリの結果が、関数の引数(items)に自動的に渡されます。
-
 ## **6. ローカル環境でのテスト**
 
 Azureにデプロイする前に、自分のPC上で関数が正しく動作するかを確認します。
