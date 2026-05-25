@@ -1,6 +1,6 @@
 # DEPRECATED!!!
 
-Azure のサービスがリブランディングされたため、CosmosDB for MongoDBは別のサービス名に置き換えられました。
+現在 MongoDB互換のDBとしてはDocumentDB (MongoDB 互換性あり)の使用が推奨されています.
 同等のドキュメントは　[azure-functions-http-documentdb-mongodb-python.md](./azure-functions-http-documentdb-mongodb-python.md) として記述されています。
 
 
