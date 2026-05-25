@@ -1,7 +1,7 @@
 # DEPRECATED!!!
 
 Azure のサービスがリブランディングされたため、CosmosDB for MongoDBは別のサービス名に置き換えられました。
-同等のドキュメントは　[azure-functions-http-documentdb-python.md](./azure-functions-http-documentdb-python.md) として記述されています。
+同等のドキュメントは　[azure-functions-http-documentdb-mongodb-python.md](./azure-functions-http-documentdb-mongodb-python.md) として記述されています。
 
 
 # **Azure Functions を用いたWeb API作成　CosmosDBとの連携(for MongoDB)**
@@ -484,4 +484,4 @@ sys.path.append(str(venv_path))
 * **完全なCRUD操作の実装**:  
   * GET /api/tasks/{id}: 特定のIDを持つタスクを1件取得する。  
   * PUT /api/tasks/{id}: 特定のタスクの内容を更新する。  
-  * DELETE /api/tasks/{id}: 特定のタスクを削除する。  
+  * DELETE /api/tasks/{id}: 特定のタスクを削除する。

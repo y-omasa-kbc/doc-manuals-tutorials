@@ -1,4 +1,7 @@
-# **Azure Functions を用いたWeb API作成　CosmosDBとの連携**
+# DEPRECATED!!!
+
+現在 MongoDB互換のDBとしてはDocumentDB (MongoDB 互換性あり)の使用が推奨されています.
+同等のドキュメントは　[azure-functions-http-documentdb-mongodb-python.md](./azure-functions-http-documentdb-mongodb-python.md) として記述されています。# **Azure Functions を用いたWeb API作成　CosmosDBとの連携**
 
 ## **1. はじめに**
 重要：このチュートリアルは、[Azure Functions を用いたWeb API作成　基礎(./azure-functions-http-basic-python.md)](./azure-functions-http-basic-python.md) の内容を理解していることを前提にしています。
