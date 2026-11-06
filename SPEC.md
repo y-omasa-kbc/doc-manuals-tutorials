@@ -19,7 +19,8 @@ IT系専門学校の学生向けに、**複数の授業で使える参考ドキ�
 - したがって Markdown は GitHub のレンダリングで正しく読めることを基準とする（Mermaid 図を含む）。
 - ファイルパスはそのまま公開URLになる。授業資料からリンクされている可能性があるため、
   移動・改名は必要な場合に限って行う。
-- [README.md](README.md) が全文書の索引である。
+- [README.md](README.md) が全文書の索引である（演習の解答を除く）。
+  リンクの文字列は文書のタイトルに合わせ、読者が見る内容と食い違わないようにする。
 
 ## 3. ディレクトリ構成
 
@@ -86,23 +87,19 @@ IT系専門学校の学生向けに、**複数の授業で使える参考ドキ�
 
 文書内のリンクと画像は相対パスで書く。
 
+ファイル名と配置は本文の内容に合わせる。特に、ファイル名や配置が示す言語と本文の言語を一致させる。
+
 ## 6. 既知の課題
 
 現状の棚卸しで見つかった課題である。`general` の整理とは別に、個別のセッションで対応する。
 
-### 索引
-
-- 次の文書が README に載っていない。
-  - `azure/functions/azure-functions-http-documentdb-python.md`
-  - `azure/functions/azure-functions-http-documentdb-mongodb-python.md`
-  - `azure/queue-storage/azure-queue-storage-basics-python.md`
-  - `python/python-concurrency.md`
-- README に載っている CosmosDB の2文書は、本文の先頭で DEPRECATED とされている。
-  DocumentDB 版への案内に置き換えるかを判断する。
-- README の冒頭に、同じ見出しと説明文が重複している。
-
 ### 内容
 
+- `azure/functions/azure-functions-http-documentdb-mongodb-python.md`: タイトル（`#` の見出し）がない。
+  学習目標とまとめがバインディングの利用を説明しているが、コードは pymongo を直接使っている。
+- `general/git/git-branch-basics.md`: タイトル（`#` の見出し）がなく、`###` から始まる。
+- `typescript/jest-typescript-basics-resources/answer-part1.md`, `answer-part2.md`:
+  本文からリンクされていない。`answer-part1.md` は JavaScript のコードに `python` の指定がある。
 - `azure/overview/azure-staticapp-webapi.md` 5行目: 「静적コンテンツ」にハングルが混入している。
 - `azure/app-configuration/azure-app-configuration-basics.md` 122行目:
   「第2回で学んだ」が授業の回に依存している。参照先の文書もリポジトリ内にない。
@@ -125,9 +122,7 @@ IT系専門学校の学生向けに、**複数の授業で使える参考ドキ�
 
 - Google ドキュメントから変換した痕跡が残っている（`## **1\. はじめに**` の太字とエスケープ、行末の空白）。
 - 見出しの付け方が文書によって異なる（タイトルが `#` でなく `##` の文書がある）。
-- ファイル名の誤字: `azure/ai-services/azure-ai-language-pyhton.md`
-- 表記の不統一: 付属ファイルの `-resource` と `-resources`、連番の `-1` と `-01`、
-  README の「MongoDB MyMongo」とファイル名の `mymongo`（本文は pymongo）。
+- 表記の不統一: 付属ファイルの `-resource` と `-resources`、連番の `-1` と `-01`。
 
 ### リポジトリ
 
